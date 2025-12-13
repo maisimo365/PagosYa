@@ -5,15 +5,27 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.Usuario
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
@@ -21,7 +33,9 @@ import com.example.serviciocobros.ui.home.UserHomeScreen
 import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.saveable.rememberSaveable
+
+val OrangeTerracotta = Color(0xFFF2994A)
+val GreenEmerald = Color(0xFF27AE60)
 
 enum class AppTheme { LIGHT, DARK, SYSTEM }
 
@@ -96,47 +110,113 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
     val context = LocalContext.current
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "PagosYa", style = MaterialTheme.typography.headlineLarge)
-        Spacer(modifier = Modifier.height(32.dp))
-        OutlinedTextField(
-            value = correo, onValueChange = { correo = it },
-            label = { Text("Correo Electrónico") }, modifier = Modifier.fillMaxWidth()
+        Image(
+            painter = painterResource(id = R.drawable.logo_pagosya1),
+            contentDescription = "Logo PagosYa",
+            modifier = Modifier
+                .width(140.dp)
+                .heightIn(max = 120.dp),
+            contentScale = ContentScale.Fit
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = password, onValueChange = { password = it },
-            label = { Text("Contraseña") }, visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
+
         Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = buildAnnotatedString {
+                withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
+                    append("Pagos")
+                }
+                withStyle(style = SpanStyle(color = GreenEmerald)) {
+                    append("Ya")
+                }
+            },
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.ExtraBold
+        )
+
+        Text(
+            text = "Tu sistema de cobros",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        OutlinedTextField(
+            value = correo,
+            onValueChange = { correo = it },
+            label = { Text("Correo Electrónico") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = OrangeTerracotta,
+                focusedLabelColor = OrangeTerracotta,
+                cursorColor = OrangeTerracotta
+            ),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = OrangeTerracotta,
+                focusedLabelColor = OrangeTerracotta,
+                cursorColor = OrangeTerracotta
+            ),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         Button(
             onClick = {
                 if (correo.isBlank() || password.isBlank()) {
-                    Toast.makeText(context, "Llena todos los campos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Por favor llena todos los campos", Toast.LENGTH_SHORT).show()
                     return@Button
                 }
+
                 isLoading = true
                 scope.launch {
                     val usuario = SupabaseClient.login(correo, password)
                     isLoading = false
+
                     if (usuario != null) {
-                        Toast.makeText(context, "Acceso concedido", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Bienvenido: ${usuario.nombre}", Toast.LENGTH_LONG).show()
                         onLoginSuccess(usuario)
                     } else {
-                        Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show()
                     }
                 }
             },
             enabled = !isLoading,
-            modifier = Modifier.fillMaxWidth().height(50.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = OrangeTerracotta,
+                contentColor = Color.White
+            )
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
-            } else { Text("Ingresar") }
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("Ingresar", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
