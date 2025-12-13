@@ -17,13 +17,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.serviciocobros.data.model.Usuario
+import com.example.serviciocobros.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserHomeScreen(
     usuario: Usuario,
     onLogout: () -> Unit,
-    onVerMenu: () -> Unit
+    onVerMenu: () -> Unit,
+    currentTheme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -31,7 +34,6 @@ fun UserHomeScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(if (selectedTab == 0) "PagosYa" else "Mi Perfil") }
-                // Quitamos el botón de logout de aquí porque ahora está en la pantalla de Perfil
             )
         },
         bottomBar = {
@@ -53,17 +55,19 @@ fun UserHomeScreen(
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             if (selectedTab == 0) {
-                // Pestaña Inicio: Mostramos las tarjetas (reutilizables)
                 UserHomeContent(usuario = usuario, onVerMenu = onVerMenu)
             } else {
-                // Pestaña Perfil
-                ProfileScreen(usuario = usuario, onLogout = onLogout)
+                ProfileScreen(
+                    usuario = usuario,
+                    onLogout = onLogout,
+                    currentTheme = currentTheme,
+                    onThemeChange = onThemeChange
+                )
             }
         }
     }
 }
 
-// --- CONTENIDO REUTILIZABLE (Lo usará el usuario y también el admin) ---
 @Composable
 fun UserHomeContent(
     usuario: Usuario,

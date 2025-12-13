@@ -6,17 +6,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.AccountCircle // Icono para perfil
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.serviciocobros.data.model.Usuario
+import com.example.serviciocobros.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminDashboardScreen(
     usuario: Usuario,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    currentTheme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit
 ) {
     // 0 = Admin, 1 = Cliente, 2 = Perfil
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -43,7 +46,7 @@ fun AdminDashboardScreen(
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    label = { Text("Cliente") }, // Cambié el texto para que quepa mejor
+                    label = { Text("Cliente") },
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 }
                 )
@@ -59,12 +62,13 @@ fun AdminDashboardScreen(
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             when (selectedTab) {
                 0 -> AdminHomeScreen(usuario = usuario)
-                1 -> {
-                    // Reutilizamos SOLO el contenido de las tarjetas, sin la navegación del usuario
-                    // (Si el admin quiere ver el menú desde aquí, por ahora no hace nada el botón)
-                    UserHomeContent(usuario = usuario, onVerMenu = {})
-                }
-                2 -> ProfileScreen(usuario = usuario, onLogout = onLogout)
+                1 -> UserHomeContent(usuario = usuario, onVerMenu = {})
+                2 -> ProfileScreen(
+                    usuario = usuario,
+                    onLogout = onLogout,
+                    currentTheme = currentTheme,
+                    onThemeChange = onThemeChange
+                )
             }
         }
     }

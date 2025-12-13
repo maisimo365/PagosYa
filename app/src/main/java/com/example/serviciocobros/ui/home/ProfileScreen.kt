@@ -1,17 +1,14 @@
 package com.example.serviciocobros.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,20 +16,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.serviciocobros.AppTheme
 import com.example.serviciocobros.data.model.Usuario
 
 @Composable
 fun ProfileScreen(
     usuario: Usuario,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    currentTheme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit
 ) {
+    var showThemeDialog by remember { mutableStateOf(false) }
+
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            currentTheme = currentTheme,
+            onDismiss = { showThemeDialog = false },
+            onThemeSelected = { newTheme ->
+                onThemeChange(newTheme)
+                showThemeDialog = false
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
+        // --- Avatar ---
         Box(
             modifier = Modifier
                 .size(100.dp)
@@ -49,17 +62,8 @@ fun ProfileScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = usuario.nombre,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = if (usuario.esAdmin) "Administrador" else "Cliente",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
+        Text(text = usuario.nombre, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(text = if (usuario.esAdmin) "Administrador" else "Cliente", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -69,25 +73,32 @@ fun ProfileScreen(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
+                ProfileInfoRow(Icons.Default.Email, "Correo", usuario.correo)
+                Divider(modifier = Modifier.padding(vertical = 12.dp))
+                ProfileInfoRow(Icons.Default.Phone, "Celular", usuario.celular ?: "No registrado")
 
-                ProfileInfoRow(icon = Icons.Default.Email, label = "Correo", value = usuario.correo)
                 Divider(modifier = Modifier.padding(vertical = 12.dp))
 
-                ProfileInfoRow(icon = Icons.Default.Business, label = "Detalle", value = usuario.empresa ?: "Sin empresa")
-                Divider(modifier = Modifier.padding(vertical = 12.dp))
-
-                ProfileInfoRow(
-                    icon = Icons.Default.Phone,
-                    label = "Celular",
-                    value = usuario.celular ?: "No registrado"
-                )
-                Divider(modifier = Modifier.padding(vertical = 12.dp))
-
-                ProfileInfoRow(
-                    icon = Icons.Default.DateRange,
-                    label = "Miembro desde",
-                    value = usuario.fechaRegistro?.take(10) ?: "Desconocido"
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showThemeDialog = true }, // Al hacer clic abre el diálogo
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(imageVector = Icons.Default.Brightness6, contentDescription = null, tint = Color.Gray)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(text = "Tema", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text(
+                            text = when(currentTheme) {
+                                AppTheme.LIGHT -> "Claro"
+                                AppTheme.DARK -> "Oscuro"
+                                AppTheme.SYSTEM -> "Predeterminado del sistema"
+                            },
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
             }
         }
 
@@ -102,6 +113,51 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.width(8.dp))
             Text("Cerrar Sesión")
         }
+    }
+}
+
+@Composable
+fun ThemeSelectionDialog(
+    currentTheme: AppTheme,
+    onDismiss: () -> Unit,
+    onThemeSelected: (AppTheme) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Elige un tema") },
+        text = {
+            Column {
+                ThemeOption(AppTheme.LIGHT, "Claro", currentTheme, onThemeSelected)
+                ThemeOption(AppTheme.DARK, "Oscuro", currentTheme, onThemeSelected)
+                ThemeOption(AppTheme.SYSTEM, "Sistema", currentTheme, onThemeSelected)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
+@Composable
+fun ThemeOption(
+    theme: AppTheme,
+    text: String,
+    currentTheme: AppTheme,
+    onSelect: (AppTheme) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect(theme) }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = (theme == currentTheme),
+            onClick = { onSelect(theme) }
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = text)
     }
 }
 
