@@ -21,6 +21,7 @@ import com.example.serviciocobros.ui.home.UserHomeScreen
 import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.saveable.rememberSaveable
 
 enum class AppTheme { LIGHT, DARK, SYSTEM }
 
@@ -56,8 +57,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
-    var usuarioActual by remember { mutableStateOf<Usuario?>(null) }
-    var pantallaSecundaria by remember { mutableStateOf<String?>(null) }
+    var usuarioActual by rememberSaveable { mutableStateOf<Usuario?>(null) }
+    var pantallaSecundaria by rememberSaveable { mutableStateOf<String?>(null) }
 
     if (usuarioActual == null) {
         LoginScreen(onLoginSuccess = { usuarioActual = it })

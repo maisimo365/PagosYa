@@ -2,8 +2,10 @@ package com.example.serviciocobros.data.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 @Serializable
+@Parcelize
 data class Usuario(
     @SerialName("id_usuario") val id: Long,
     @SerialName("nombre_completo") val nombre: String,
@@ -12,4 +14,4 @@ data class Usuario(
     @SerialName("numero_celular") val celular: String? = null,
     @SerialName("fecha_registro") val fechaRegistro: String? = null,
     val empresa: String? = null
-)
+) : Parcelable
