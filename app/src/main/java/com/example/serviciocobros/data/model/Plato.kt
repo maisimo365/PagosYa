@@ -9,5 +9,4 @@ data class Plato(
     @SerialName("nombre_plato") val nombre: String,
     val precio: Double,
     @SerialName("foto_plato") val fotoUrl: String? = null,
-    val estado: String? = "activo"
 )

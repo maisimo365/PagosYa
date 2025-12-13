@@ -73,7 +73,6 @@ object SupabaseClient {
             client.from("platos").select {
                 filter {
                     eq("activo", true)
-                    eq("estado", "activo")
                 }
             }.decodeList<Plato>()
         } catch (e: Exception) {
