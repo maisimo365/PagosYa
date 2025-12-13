@@ -13,6 +13,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.serviciocobros.data.SupabaseClient
+import com.example.serviciocobros.data.model.Usuario
+import com.example.serviciocobros.ui.home.AdminDashboardScreen // <--- Importamos pantalla Admin
+import com.example.serviciocobros.ui.home.UserHomeScreen      // <--- Importamos pantalla Usuario
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
 
@@ -22,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ServicioCobrosTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    LoginScreen()
+                    AppNavigation()
                 }
             }
         }
@@ -30,8 +33,30 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen() {
-    // Variables de estado para guardar lo que escribe el usuario
+fun AppNavigation() {
+    var usuarioActual by remember { mutableStateOf<Usuario?>(null) }
+
+    if (usuarioActual == null) {
+        LoginScreen(onLoginSuccess = { usuarioLogueado ->
+            usuarioActual = usuarioLogueado
+        })
+    } else {
+        if (usuarioActual!!.esAdmin) {
+            AdminDashboardScreen(
+                usuario = usuarioActual!!,
+                onLogout = { usuarioActual = null }
+            )
+        } else {
+            UserHomeScreen(
+                usuario = usuarioActual!!,
+                onLogout = { usuarioActual = null }
+            )
+        }
+    }
+}
+
+@Composable
+fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
@@ -62,7 +87,7 @@ fun LoginScreen() {
             value = password,
             onValueChange = { password = it },
             label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(), // Oculta la contraseña con puntitos
+            visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -78,12 +103,13 @@ fun LoginScreen() {
                 isLoading = true
                 scope.launch {
                     val usuario = SupabaseClient.login(correo, password)
-
                     isLoading = false
+
                     if (usuario != null) {
-                        Toast.makeText(context, "¡Bienvenido ${usuario.nombre}!", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Acceso concedido", Toast.LENGTH_SHORT).show()
+                        onLoginSuccess(usuario)
                     } else {
-                        Toast.makeText(context, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_LONG).show()
                     }
                 }
             },
