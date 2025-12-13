@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.serviciocobros.data.model.Usuario
 import com.example.serviciocobros.AppTheme
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,7 +23,7 @@ fun AdminDashboardScreen(
     onThemeChange: (AppTheme) -> Unit
 ) {
     // 0 = Admin, 1 = Cliente, 2 = Perfil
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {

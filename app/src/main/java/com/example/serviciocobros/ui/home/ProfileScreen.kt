@@ -73,16 +73,30 @@ fun ProfileScreen(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                ProfileInfoRow(Icons.Default.Email, "Correo", usuario.correo)
+                ProfileInfoRow(icon = Icons.Default.Email, label = "Correo", value = usuario.correo)
                 Divider(modifier = Modifier.padding(vertical = 12.dp))
-                ProfileInfoRow(Icons.Default.Phone, "Celular", usuario.celular ?: "No registrado")
+
+                ProfileInfoRow(icon = Icons.Default.Business, label = "Detalle", value = usuario.empresa ?: "Sin empresa")
+                Divider(modifier = Modifier.padding(vertical = 12.dp))
+
+                ProfileInfoRow(
+                    icon = Icons.Default.Phone,
+                    label = "Celular",
+                    value = usuario.celular ?: "No registrado"
+                )
+                Divider(modifier = Modifier.padding(vertical = 12.dp))
+
+                ProfileInfoRow(
+                    icon = Icons.Default.DateRange,
+                    label = "Miembro desde",
+                    value = usuario.fechaRegistro?.take(10) ?: "Desconocido")
 
                 Divider(modifier = Modifier.padding(vertical = 12.dp))
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { showThemeDialog = true }, // Al hacer clic abre el diálogo
+                        .clickable { showThemeDialog = true },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(imageVector = Icons.Default.Brightness6, contentDescription = null, tint = Color.Gray)
