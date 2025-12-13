@@ -1,26 +1,28 @@
 package com.example.serviciocobros.ui.menu
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.Plato
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
-import androidx.compose.foundation.background
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,13 +31,26 @@ fun MenuScreen(
 ) {
     var platos by remember { mutableStateOf<List<Plato>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+
+    // Estado para el Pull to Refresh
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullState = rememberPullToRefreshState()
+
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    val cargarDatos = {
         scope.launch {
+            if (!isRefreshing) isLoading = true
+
             platos = SupabaseClient.obtenerPlatos()
+
             isLoading = false
+            isRefreshing = false
         }
+    }
+
+    LaunchedEffect(Unit) {
+        cargarDatos()
     }
 
     Scaffold(
@@ -50,17 +65,32 @@ fun MenuScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        PullToRefreshBox(
+            modifier = Modifier.padding(padding).fillMaxSize(),
+            state = pullState,
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                cargarDatos()
+            }
+        ) {
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 if (platos.isEmpty()) {
-                    Text(
-                        text = "No hay platos disponibles por ahora.",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "No hay platos disponibles por ahora.")
+                    }
                 } else {
-                    LazyColumn(contentPadding = PaddingValues(16.dp)) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                         items(platos) { plato ->
                             PlatoItem(plato)
                             Spacer(modifier = Modifier.height(8.dp))
@@ -88,7 +118,6 @@ fun PlatoItem(plato: Plato) {
                 .size(70.dp)
                 .clip(RoundedCornerShape(12.dp))
 
-            // Lógica: ¿Tiene URL la foto?
             if (plato.fotoUrl.isNullOrBlank()) {
                 Box(
                     modifier = imageModifier.background(MaterialTheme.colorScheme.surfaceVariant),

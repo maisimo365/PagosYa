@@ -50,6 +50,23 @@ object SupabaseClient {
         }
     }
 
+    suspend fun obtenerUsuarioPorId(id: Long): Usuario? {
+        return try {
+            val columns = Columns.list(
+                "id_usuario", "nombre_completo", "correo_electronico",
+                "es_administrador", "empresa", "numero_celular", "fecha_registro"
+            )
+            client.from("usuarios").select(columns = columns) {
+                filter {
+                    eq("id_usuario", id)
+                }
+            }.decodeSingleOrNull<Usuario>()
+        } catch (e: Exception) {
+            println("Error al refrescar usuario: ${e.message}")
+            null
+        }
+    }
+
     // Función para obtener platos
     suspend fun obtenerPlatos(): List<Plato> {
         return try {

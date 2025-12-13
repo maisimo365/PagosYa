@@ -2,6 +2,8 @@ package com.example.serviciocobros.ui.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.History
@@ -9,6 +11,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.serviciocobros.data.model.Usuario
 import com.example.serviciocobros.AppTheme
 import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,9 +32,15 @@ fun UserHomeScreen(
     onLogout: () -> Unit,
     onVerMenu: () -> Unit,
     currentTheme: AppTheme,
-    onThemeChange: (AppTheme) -> Unit
+    onThemeChange: (AppTheme) -> Unit,
+    onRefresh: suspend () -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    // Estado local para el refresco
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullState = rememberPullToRefreshState()
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -54,16 +65,29 @@ fun UserHomeScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-            if (selectedTab == 0) {
-                UserHomeContent(usuario = usuario, onVerMenu = onVerMenu)
-            } else {
-                ProfileScreen(
-                    usuario = usuario,
-                    onLogout = onLogout,
-                    currentTheme = currentTheme,
-                    onThemeChange = onThemeChange
-                )
+        PullToRefreshBox(
+            modifier = Modifier.padding(paddingValues).fillMaxSize(),
+            state = pullState,
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                scope.launch {
+                    isRefreshing = true
+                    onRefresh()
+                    isRefreshing = false
+                }
+            }
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (selectedTab == 0) {
+                    UserHomeContent(usuario = usuario, onVerMenu = onVerMenu)
+                } else {
+                    ProfileScreen(
+                        usuario = usuario,
+                        onLogout = onLogout,
+                        currentTheme = currentTheme,
+                        onThemeChange = onThemeChange
+                    )
+                }
             }
         }
     }
@@ -77,6 +101,7 @@ fun UserHomeContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState()) // Scroll necesario
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

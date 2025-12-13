@@ -8,11 +8,14 @@ import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.serviciocobros.data.model.Usuario
 import com.example.serviciocobros.AppTheme
 import androidx.compose.runtime.saveable.rememberSaveable
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,10 +23,15 @@ fun AdminDashboardScreen(
     usuario: Usuario,
     onLogout: () -> Unit,
     currentTheme: AppTheme,
-    onThemeChange: (AppTheme) -> Unit
+    onRefresh: suspend () -> Unit,
+    onThemeChange: (AppTheme) -> Unit,
 ) {
     // 0 = Admin, 1 = Cliente, 2 = Perfil
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullState = rememberPullToRefreshState()
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -60,16 +68,29 @@ fun AdminDashboardScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-            when (selectedTab) {
-                0 -> AdminHomeScreen(usuario = usuario)
-                1 -> UserHomeContent(usuario = usuario, onVerMenu = {})
-                2 -> ProfileScreen(
-                    usuario = usuario,
-                    onLogout = onLogout,
-                    currentTheme = currentTheme,
-                    onThemeChange = onThemeChange
-                )
+        PullToRefreshBox(
+            modifier = Modifier.padding(paddingValues).fillMaxSize(),
+            state = pullState,
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                scope.launch {
+                    isRefreshing = true
+                    onRefresh()
+                    isRefreshing = false
+                }
+            }
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (selectedTab) {
+                    0 -> AdminHomeScreen(usuario = usuario)
+                    1 -> UserHomeContent(usuario = usuario, onVerMenu = {})
+                    2 -> ProfileScreen(
+                        usuario = usuario,
+                        onLogout = onLogout,
+                        currentTheme = currentTheme,
+                        onThemeChange = onThemeChange
+                    )
+                }
             }
         }
     }

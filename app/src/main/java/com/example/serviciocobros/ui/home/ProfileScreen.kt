@@ -3,7 +3,9 @@ package com.example.serviciocobros.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
@@ -43,9 +45,12 @@ fun ProfileScreen(
         )
     }
 
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scrollState)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -144,7 +149,6 @@ fun ThemeSelectionDialog(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
-        // Forma redondeada suave (CornerSize 16dp sugerido en PDF)
         shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
         title = {
             Text(
@@ -191,7 +195,6 @@ fun ThemeOptionItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    // Definimos colores según si está seleccionado o no
     val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
     val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
     val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f)

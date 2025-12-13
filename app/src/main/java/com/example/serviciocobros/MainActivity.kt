@@ -36,7 +36,6 @@ import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
 
-// Definimos tus colores de marca
 val OrangeTerracotta = Color(0xFFF2994A)
 val GreenEmerald = Color(0xFF27AE60)
 
@@ -77,6 +76,16 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     var usuarioActual by rememberSaveable { mutableStateOf<Usuario?>(null) }
     var pantallaSecundaria by rememberSaveable { mutableStateOf<String?>(null) }
 
+    val refreshUser: suspend () -> Unit = {
+        val id = usuarioActual?.id
+        if (id != null) {
+            val actualizado = SupabaseClient.obtenerUsuarioPorId(id)
+            if (actualizado != null) {
+                usuarioActual = actualizado
+            }
+        }
+    }
+
     if (usuarioActual == null) {
         LoginScreen(onLoginSuccess = { usuarioActual = it })
     } else {
@@ -88,7 +97,8 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                     usuario = usuarioActual!!,
                     onLogout = { usuarioActual = null },
                     currentTheme = currentTheme,
-                    onThemeChange = onThemeChange
+                    onThemeChange = onThemeChange,
+                    onRefresh = refreshUser
                 )
             } else {
                 UserHomeScreen(
@@ -96,7 +106,8 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                     onLogout = { usuarioActual = null },
                     onVerMenu = { pantallaSecundaria = "menu" },
                     currentTheme = currentTheme,
-                    onThemeChange = onThemeChange
+                    onThemeChange = onThemeChange,
+                    onRefresh = refreshUser
                 )
             }
         }
@@ -111,8 +122,6 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
-    // Estado para el scroll
     val scrollState = rememberScrollState()
 
     Column(
@@ -125,9 +134,8 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Logo
         Image(
-            painter = painterResource(id = R.drawable.logo_pagosya1),
+            painter = painterResource(id = R.drawable.logo_pagosya),
             contentDescription = "Logo PagosYa",
             modifier = Modifier
                 .width(140.dp)
@@ -137,13 +145,12 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Texto con estilos mixtos
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
                     append("Pagos")
                 }
-                withStyle(style = SpanStyle(color = GreenEmerald)) { // "Ya" en Verde
+                withStyle(style = SpanStyle(color = GreenEmerald)) {
                     append("Ya")
                 }
             },
@@ -159,7 +166,6 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Campo Correo
         OutlinedTextField(
             value = correo,
             onValueChange = { correo = it },
@@ -176,7 +182,6 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo Contraseña
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
