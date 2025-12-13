@@ -3,12 +3,13 @@ package com.example.serviciocobros.ui.home
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,70 +25,96 @@ fun UserHomeScreen(
     onLogout: () -> Unit,
     onVerMenu: () -> Unit
 ) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("PagosYa") },
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = "Cerrar Sesión",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
+                title = { Text(if (selectedTab == 0) "PagosYa" else "Mi Perfil") }
+                // Quitamos el botón de logout de aquí porque ahora está en la pantalla de Perfil
             )
+        },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
+                    label = { Text("Inicio") },
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                    label = { Text("Perfil") },
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 }
+                )
+            }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Hola, ${usuario.nombre}",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Panel de Cliente",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            MenuOptionCard(
-                titulo = "Mis Deudas",
-                descripcion = "Revisa tu saldo pendiente",
-                icono = Icons.Default.AccountBalanceWallet,
-                colorIcono = Color(0xFFD32F2F),
-                onClick = { /* TODO: Navegar a Deudas */ }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            MenuOptionCard(
-                titulo = "Pagos Realizados",
-                descripcion = "Ver historial de transacciones",
-                icono = Icons.Default.History,
-                colorIcono = Color(0xFF1976D2),
-                onClick = { /* TODO: Navegar a Historial */ }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            MenuOptionCard(
-                titulo = "Ver Menú",
-                descripcion = "Explora nuestros platillos",
-                icono = Icons.Default.RestaurantMenu,
-                colorIcono = Color(0xFF388E3C),
-                onClick = { onVerMenu() }
-            )
+        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            if (selectedTab == 0) {
+                // Pestaña Inicio: Mostramos las tarjetas (reutilizables)
+                UserHomeContent(usuario = usuario, onVerMenu = onVerMenu)
+            } else {
+                // Pestaña Perfil
+                ProfileScreen(usuario = usuario, onLogout = onLogout)
+            }
         }
+    }
+}
+
+// --- CONTENIDO REUTILIZABLE (Lo usará el usuario y también el admin) ---
+@Composable
+fun UserHomeContent(
+    usuario: Usuario,
+    onVerMenu: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Hola, ${usuario.nombre}",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Panel de Cliente",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        MenuOptionCard(
+            titulo = "Mis Deudas",
+            descripcion = "Revisa tu saldo pendiente",
+            icono = Icons.Default.AccountBalanceWallet,
+            colorIcono = Color(0xFFD32F2F),
+            onClick = { /* TODO: Navegar a Deudas */ }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        MenuOptionCard(
+            titulo = "Pagos Realizados",
+            descripcion = "Ver historial de transacciones",
+            icono = Icons.Default.History,
+            colorIcono = Color(0xFF1976D2),
+            onClick = { /* TODO: Navegar a Historial */ }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        MenuOptionCard(
+            titulo = "Ver Menú",
+            descripcion = "Explora nuestros platillos",
+            icono = Icons.Default.RestaurantMenu,
+            colorIcono = Color(0xFF388E3C),
+            onClick = onVerMenu
+        )
     }
 }
 

@@ -1,10 +1,12 @@
 package com.example.serviciocobros.ui.home
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.AccountCircle // Icono para perfil
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -16,21 +18,18 @@ fun AdminDashboardScreen(
     usuario: Usuario,
     onLogout: () -> Unit
 ) {
-
+    // 0 = Admin, 1 = Cliente, 2 = Perfil
     var selectedTab by remember { mutableIntStateOf(0) }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("PagosYa (Admin)") },
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = "Cerrar Sesión",
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+                title = {
+                    Text(when(selectedTab) {
+                        0 -> "PagosYa (Admin)"
+                        1 -> "Vista Cliente"
+                        else -> "Mi Perfil"
+                    })
                 }
             )
         },
@@ -44,19 +43,28 @@ fun AdminDashboardScreen(
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    label = { Text("Ver como Cliente") },
+                    label = { Text("Cliente") }, // Cambié el texto para que quepa mejor
                     selected = selectedTab == 1,
                     onClick = { selectedTab = 1 }
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
+                    label = { Text("Perfil") },
+                    selected = selectedTab == 2,
+                    onClick = { selectedTab = 2 }
                 )
             }
         }
     ) { paddingValues ->
-        Surface(modifier = Modifier.padding(paddingValues)) {
-            if (selectedTab == 0) {
-                AdminHomeScreen(usuario = usuario)
-            } else {
-
-                UserHomeScreen(usuario = usuario, onLogout = {}, onVerMenu = {})
+        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+            when (selectedTab) {
+                0 -> AdminHomeScreen(usuario = usuario)
+                1 -> {
+                    // Reutilizamos SOLO el contenido de las tarjetas, sin la navegación del usuario
+                    // (Si el admin quiere ver el menú desde aquí, por ahora no hace nada el botón)
+                    UserHomeContent(usuario = usuario, onVerMenu = {})
+                }
+                2 -> ProfileScreen(usuario = usuario, onLogout = onLogout)
             }
         }
     }

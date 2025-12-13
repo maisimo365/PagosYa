@@ -25,7 +25,17 @@ object SupabaseClient {
     // Función para validar el login
     suspend fun login(correo: String, pass: String): Usuario? {
         try {
-            val resultado = client.from("usuarios").select(columns = Columns.list("id_usuario", "nombre_completo", "correo_electronico", "es_administrador", "empresa")) {
+            val columns = Columns.list(
+                "id_usuario",
+                "nombre_completo",
+                "correo_electronico",
+                "es_administrador",
+                "empresa",
+                "numero_celular",
+                "fecha_registro"
+            )
+
+            val resultado = client.from("usuarios").select(columns = columns) {
                 filter {
                     eq("correo_electronico", correo)
                     eq("contrasena", pass)

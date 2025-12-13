@@ -9,5 +9,7 @@ data class Usuario(
     @SerialName("nombre_completo") val nombre: String,
     @SerialName("correo_electronico") val correo: String,
     @SerialName("es_administrador") val esAdmin: Boolean = false,
+    @SerialName("numero_celular") val celular: String? = null,
+    @SerialName("fecha_registro") val fechaRegistro: String? = null,
     val empresa: String? = null
 )
