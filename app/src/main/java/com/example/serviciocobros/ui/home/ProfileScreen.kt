@@ -18,6 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.serviciocobros.AppTheme
 import com.example.serviciocobros.data.model.Usuario
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.SettingsSuggest
+import androidx.compose.material.icons.filled.WbSunny
 
 @Composable
 fun ProfileScreen(
@@ -138,40 +142,92 @@ fun ThemeSelectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Elige un tema") },
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        // Forma redondeada suave (CornerSize 16dp sugerido en PDF)
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                text = "Apariencia",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        },
         text = {
-            Column {
-                ThemeOption(AppTheme.LIGHT, "Claro", currentTheme, onThemeSelected)
-                ThemeOption(AppTheme.DARK, "Oscuro", currentTheme, onThemeSelected)
-                ThemeOption(AppTheme.SYSTEM, "Sistema", currentTheme, onThemeSelected)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                ThemeOptionItem(
+                    title = "Modo Claro",
+                    icon = Icons.Default.WbSunny,
+                    isSelected = currentTheme == AppTheme.LIGHT,
+                    onClick = { onThemeSelected(AppTheme.LIGHT) }
+                )
+                ThemeOptionItem(
+                    title = "Modo Oscuro",
+                    icon = Icons.Default.NightsStay,
+                    isSelected = currentTheme == AppTheme.DARK,
+                    onClick = { onThemeSelected(AppTheme.DARK) }
+                )
+                ThemeOptionItem(
+                    title = "Sistema",
+                    icon = Icons.Default.SettingsSuggest,
+                    isSelected = currentTheme == AppTheme.SYSTEM,
+                    onClick = { onThemeSelected(AppTheme.SYSTEM) }
+                )
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar", fontWeight = FontWeight.Bold)
+            }
         }
     )
 }
 
 @Composable
-fun ThemeOption(
-    theme: AppTheme,
-    text: String,
-    currentTheme: AppTheme,
-    onSelect: (AppTheme) -> Unit
+fun ThemeOptionItem(
+    title: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onSelect(theme) }
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    // Definimos colores según si está seleccionado o no
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f)
+
+    Surface(
+        onClick = onClick,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        color = containerColor,
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        RadioButton(
-            selected = (theme == currentTheme),
-            onClick = { onSelect(theme) }
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = text)
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = contentColor
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Seleccionado",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }
 
