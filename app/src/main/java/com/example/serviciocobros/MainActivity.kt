@@ -9,7 +9,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -34,6 +36,7 @@ import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
 
+// Definimos tus colores de marca
 val OrangeTerracotta = Color(0xFFF2994A)
 val GreenEmerald = Color(0xFF27AE60)
 
@@ -109,14 +112,20 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    // Estado para el scroll
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(32.dp),
+            .padding(32.dp)
+            .verticalScroll(scrollState)
+            .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Logo
         Image(
             painter = painterResource(id = R.drawable.logo_pagosya1),
             contentDescription = "Logo PagosYa",
@@ -128,12 +137,13 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Texto con estilos mixtos
         Text(
             text = buildAnnotatedString {
                 withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
                     append("Pagos")
                 }
-                withStyle(style = SpanStyle(color = GreenEmerald)) {
+                withStyle(style = SpanStyle(color = GreenEmerald)) { // "Ya" en Verde
                     append("Ya")
                 }
             },
@@ -149,6 +159,7 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
         Spacer(modifier = Modifier.height(48.dp))
 
+        // Campo Correo
         OutlinedTextField(
             value = correo,
             onValueChange = { correo = it },
@@ -165,6 +176,7 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Campo Contraseña
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
