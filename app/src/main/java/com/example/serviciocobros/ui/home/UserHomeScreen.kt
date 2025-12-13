@@ -21,7 +21,8 @@ import com.example.serviciocobros.data.model.Usuario
 @Composable
 fun UserHomeScreen(
     usuario: Usuario,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onVerMenu: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -84,7 +85,7 @@ fun UserHomeScreen(
                 descripcion = "Explora nuestros platillos",
                 icono = Icons.Default.RestaurantMenu,
                 colorIcono = Color(0xFF388E3C),
-                onClick = { /* TODO: Navegar a Menú */ }
+                onClick = { onVerMenu() }
             )
         }
     }

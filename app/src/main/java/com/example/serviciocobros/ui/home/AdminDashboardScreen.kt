@@ -56,7 +56,7 @@ fun AdminDashboardScreen(
                 AdminHomeScreen(usuario = usuario)
             } else {
 
-                UserHomeScreen(usuario = usuario, onLogout = {})
+                UserHomeScreen(usuario = usuario, onLogout = {}, onVerMenu = {})
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.serviciocobros.data
 
 import com.example.serviciocobros.BuildConfig
+import com.example.serviciocobros.data.model.Plato
 import com.example.serviciocobros.data.model.Usuario
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -36,6 +37,21 @@ object SupabaseClient {
         } catch (e: Exception) {
             println("Error en login: ${e.message}")
             return null
+        }
+    }
+
+    // Función para obtener platos
+    suspend fun obtenerPlatos(): List<Plato> {
+        return try {
+            client.from("platos").select {
+                filter {
+                    eq("activo", true)
+                    eq("estado", "activo")
+                }
+            }.decodeList<Plato>()
+        } catch (e: Exception) {
+            println("Error al obtener platos: ${e.message}")
+            emptyList()
         }
     }
 }

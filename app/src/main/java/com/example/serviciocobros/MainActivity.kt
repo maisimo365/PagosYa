@@ -14,8 +14,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.Usuario
-import com.example.serviciocobros.ui.home.AdminDashboardScreen // <--- Importamos pantalla Admin
-import com.example.serviciocobros.ui.home.UserHomeScreen      // <--- Importamos pantalla Usuario
+import com.example.serviciocobros.ui.home.AdminDashboardScreen
+import com.example.serviciocobros.ui.home.UserHomeScreen
+import com.example.serviciocobros.ui.menu.MenuScreen // Importante
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
 
@@ -35,22 +36,30 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     var usuarioActual by remember { mutableStateOf<Usuario?>(null) }
+    var pantallaSecundaria by remember { mutableStateOf<String?>(null) }
 
     if (usuarioActual == null) {
         LoginScreen(onLoginSuccess = { usuarioLogueado ->
             usuarioActual = usuarioLogueado
         })
     } else {
-        if (usuarioActual!!.esAdmin) {
-            AdminDashboardScreen(
-                usuario = usuarioActual!!,
-                onLogout = { usuarioActual = null }
+        if (pantallaSecundaria == "menu") {
+            MenuScreen(
+                onBack = { pantallaSecundaria = null }
             )
         } else {
-            UserHomeScreen(
-                usuario = usuarioActual!!,
-                onLogout = { usuarioActual = null }
-            )
+            if (usuarioActual!!.esAdmin) {
+                AdminDashboardScreen(
+                    usuario = usuarioActual!!,
+                    onLogout = { usuarioActual = null }
+                )
+            } else {
+                UserHomeScreen(
+                    usuario = usuarioActual!!,
+                    onLogout = { usuarioActual = null },
+                    onVerMenu = { pantallaSecundaria = "menu" }
+                )
+            }
         }
     }
 }
@@ -60,6 +69,7 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
