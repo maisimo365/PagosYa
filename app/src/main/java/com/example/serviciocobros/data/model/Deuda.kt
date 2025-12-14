@@ -28,3 +28,12 @@ data class Deuda(
     val descripcion: String? = null,
     val platos: PlatoSimple? = null
 )
+@Serializable
+data class PagoInsert(
+    @SerialName("id_consumidor") val idConsumidor: Long,
+    @SerialName("id_cobrador") val idCobrador: Long,
+    @SerialName("id_deuda") val idDeuda: Long,
+    @SerialName("monto_pagado") val montoPagado: Double,
+    @SerialName("tipo_pago") val tipoPago: String, // 'completo' o 'parcial'
+    @SerialName("metodo_pago") val metodoPago: String = "efectivo"
+)

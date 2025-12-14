@@ -4,14 +4,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.Deuda
@@ -24,20 +27,34 @@ fun CobrarDetailScreen(
     userName: String,
     onBack: () -> Unit
 ) {
+    val cobradorId = 1L
+
     var deudas by remember { mutableStateOf<List<Deuda>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
+    var showPaymentDialog by remember { mutableStateOf(false) }
+    var montoInput by remember { mutableStateOf("") }
+    var isProcesandoPago by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    fun cargarDeudas() {
         scope.launch {
+            isLoading = true
             deudas = SupabaseClient.obtenerMisDeudas(userId)
             isLoading = false
         }
     }
 
+    LaunchedEffect(Unit) {
+        cargarDeudas()
+    }
+
     val totalDeuda = remember(deudas) { deudas.sumOf { it.saldoPendiente } }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -52,6 +69,16 @@ fun CobrarDetailScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            if (!isLoading && totalDeuda > 0) {
+                ExtendedFloatingActionButton(
+                    onClick = { showPaymentDialog = true },
+                    icon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
+                    text = { Text("REGISTRAR PAGO") },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            }
         }
     ) { padding ->
         Column(
@@ -93,7 +120,7 @@ fun CobrarDetailScreen(
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    contentPadding = PaddingValues(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(deudas) { deuda ->
@@ -101,6 +128,69 @@ fun CobrarDetailScreen(
                     }
                 }
             }
+        }
+
+        if (showPaymentDialog) {
+            AlertDialog(
+                onDismissRequest = { if (!isProcesandoPago) showPaymentDialog = false },
+                title = { Text("Registrar Pago") },
+                text = {
+                    Column {
+                        Text("Ingrese el monto a pagar. Se descontará automáticamente de las deudas más antiguas.")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = montoInput,
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isDigit() || it == '.' } && newValue.count { it == '.' } <= 1) {
+                                    montoInput = newValue
+                                }
+                            },
+                            label = { Text("Monto (Bs.)") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val monto = montoInput.toDoubleOrNull()
+                            if (monto != null && monto > 0) {
+                                scope.launch {
+                                    isProcesandoPago = true
+                                    val exito = SupabaseClient.registrarPago(userId, cobradorId, monto)
+
+                                    if (exito) {
+                                        snackbarHostState.showSnackbar("Pago registrado con éxito")
+                                        montoInput = ""
+                                        showPaymentDialog = false
+                                        cargarDeudas()
+                                    } else {
+                                        snackbarHostState.showSnackbar("Error al procesar el pago")
+                                    }
+                                    isProcesandoPago = false
+                                }
+                            }
+                        },
+                        enabled = !isProcesandoPago && montoInput.isNotEmpty()
+                    ) {
+                        if (isProcesandoPago) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                        } else {
+                            Text("Confirmar")
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showPaymentDialog = false },
+                        enabled = !isProcesandoPago
+                    ) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }
@@ -138,7 +228,7 @@ fun CobrarDeudaItem(deuda: Deuda) {
                 text = "Bs. ${deuda.saldoPendiente}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFD32F2F)
+                color = if (deuda.saldoPendiente > 0) Color(0xFFD32F2F) else Color(0xFF388E3C)
             )
         }
     }

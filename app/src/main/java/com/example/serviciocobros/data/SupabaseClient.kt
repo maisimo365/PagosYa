@@ -11,6 +11,8 @@ import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Columns
 import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.realtime.Realtime
+import com.example.serviciocobros.data.model.PagoInsert
+import kotlin.math.min
 
 object SupabaseClient {
     //Conexion con supabase
@@ -127,4 +129,46 @@ object SupabaseClient {
         }
     }
 
+    // Funcion para registrar pago en la BD
+    suspend fun registrarPago(idConsumidor: Long, idCobrador: Long, montoTotal: Double): Boolean {
+        return try {
+            val deudasActivas = client.from("deudas").select {
+                filter {
+                    eq("id_consumidor", idConsumidor)
+                    gt("saldo_pendiente", 0)
+                }
+                order("fecha_consumo", Order.ASCENDING)
+            }.decodeList<Deuda>()
+
+            var montoRestante = montoTotal
+
+            for (deuda in deudasActivas) {
+                if (montoRestante <= 0) break
+                val montoAPagar = min(deuda.saldoPendiente, montoRestante)
+                val nuevoSaldo = deuda.saldoPendiente - montoAPagar
+                val tipoPago = if (nuevoSaldo <= 0.0) "completo" else "parcial"
+                val pago = PagoInsert(
+                    idConsumidor = idConsumidor,
+                    idCobrador = idCobrador,
+                    idDeuda = deuda.id,
+                    montoPagado = montoAPagar,
+                    tipoPago = tipoPago
+                )
+                client.from("pagos").insert(pago)
+
+                client.from("deudas").update({
+                    set("saldo_pendiente", nuevoSaldo)
+
+                }) {
+                    filter { eq("id_deuda", deuda.id) }
+                }
+
+                montoRestante -= montoAPagar
+            }
+            true
+        } catch (e: Exception) {
+            println("Error al registrar pago: ${e.message}")
+            false
+        }
+    }
 }
