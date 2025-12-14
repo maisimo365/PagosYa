@@ -1,6 +1,7 @@
 package com.example.serviciocobros.data
 
 import com.example.serviciocobros.BuildConfig
+import com.example.serviciocobros.data.model.Deuda
 import com.example.serviciocobros.data.model.DeudaInsert
 import com.example.serviciocobros.data.model.Plato
 import com.example.serviciocobros.data.model.Usuario
@@ -107,4 +108,23 @@ object SupabaseClient {
             false
         }
     }
+
+    // Funcion para obtener la deuda de la BD
+    suspend fun obtenerMisDeudas(idUsuario: Long): List<Deuda> {
+        return try {
+            val columns = Columns.raw("*, platos(nombre_plato)")
+            client.from("deudas").select(columns = columns) {
+                filter {
+                    eq("id_consumidor", idUsuario)
+                    eq("activo", true)
+                    gt("saldo_pendiente", 0)
+                }
+                order("fecha_consumo", Order.DESCENDING)
+            }.decodeList<Deuda>()
+        } catch (e: Exception) {
+            println("Error al obtener deudas: ${e.message}")
+            emptyList()
+        }
+    }
+
 }

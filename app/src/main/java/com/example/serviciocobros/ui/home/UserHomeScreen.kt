@@ -31,6 +31,7 @@ fun UserHomeScreen(
     usuario: Usuario,
     onLogout: () -> Unit,
     onVerMenu: () -> Unit,
+    onVerDeudas: () -> Unit,
     currentTheme: AppTheme,
     onThemeChange: (AppTheme) -> Unit,
     onRefresh: suspend () -> Unit
@@ -79,7 +80,7 @@ fun UserHomeScreen(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (selectedTab == 0) {
-                    UserHomeContent(usuario = usuario, onVerMenu = onVerMenu)
+                    UserHomeContent(usuario = usuario, onVerMenu = onVerMenu, onVerDeudas = onVerDeudas)
                 } else {
                     ProfileScreen(
                         usuario = usuario,
@@ -96,7 +97,8 @@ fun UserHomeScreen(
 @Composable
 fun UserHomeContent(
     usuario: Usuario,
-    onVerMenu: () -> Unit
+    onVerMenu: () -> Unit,
+    onVerDeudas: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -123,7 +125,7 @@ fun UserHomeContent(
             descripcion = "Revisa tu saldo pendiente",
             icono = Icons.Default.AccountBalanceWallet,
             colorIcono = Color(0xFFD32F2F),
-            onClick = { /* TODO: Navegar a Deudas */ }
+            onClick = onVerDeudas
         )
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.Usuario
+import com.example.serviciocobros.ui.debts.UserDebtsScreen
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
 import com.example.serviciocobros.ui.home.UserHomeScreen
@@ -48,8 +49,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalContext.current
             val prefs = remember { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) }
-            val savedThemeName = remember { prefs.getString("theme_mode", AppTheme.SYSTEM.name) }
 
+            val savedThemeName = remember { prefs.getString("theme_mode", AppTheme.SYSTEM.name) }
             var currentTheme by remember { mutableStateOf(AppTheme.valueOf(savedThemeName ?: "SYSTEM")) }
 
             val onThemeChange: (AppTheme) -> Unit = { newTheme ->
@@ -81,7 +82,9 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
         val id = usuarioActual?.id
         if (id != null) {
             val actualizado = SupabaseClient.obtenerUsuarioPorId(id)
-            if (actualizado != null) usuarioActual = actualizado
+            if (actualizado != null) {
+                usuarioActual = actualizado
+            }
         }
     }
 
@@ -92,11 +95,17 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
             "menu" -> {
                 MenuScreen(onBack = { pantallaSecundaria = null })
             }
-            "anotar" -> { // <--- RUTA NUEVA
+            "anotar" -> {
                 RegisterDebtScreen(
                     idRegistrador = usuarioActual!!.id,
                     onBack = { pantallaSecundaria = null },
                     onSuccess = { pantallaSecundaria = null }
+                )
+            }
+            "mis_deudas" -> {
+                UserDebtsScreen(
+                    userId = usuarioActual!!.id,
+                    onBack = { pantallaSecundaria = null }
                 )
             }
             else -> {
@@ -107,13 +116,14 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                         currentTheme = currentTheme,
                         onThemeChange = onThemeChange,
                         onRefresh = refreshUser,
-                        onNavigateToAnotar = { pantallaSecundaria = "anotar" } // <--- Pasamos la navegación
+                        onNavigateToAnotar = { pantallaSecundaria = "anotar" }
                     )
                 } else {
                     UserHomeScreen(
                         usuario = usuarioActual!!,
                         onLogout = { usuarioActual = null },
                         onVerMenu = { pantallaSecundaria = "menu" },
+                        onVerDeudas = { pantallaSecundaria = "mis_deudas" },
                         currentTheme = currentTheme,
                         onThemeChange = onThemeChange,
                         onRefresh = refreshUser
@@ -155,93 +165,46 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
 
         Text(
             text = buildAnnotatedString {
-                withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
-                    append("Pagos")
-                }
-                withStyle(style = SpanStyle(color = GreenEmerald)) {
-                    append("Ya")
-                }
+                withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onSurface)) { append("Pagos") }
+                withStyle(style = SpanStyle(color = GreenEmerald)) { append("Ya") }
             },
             style = MaterialTheme.typography.displayMedium,
             fontWeight = FontWeight.ExtraBold
         )
 
-        Text(
-            text = "Tu sistema de cobros",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
+        Text(text = "Tu sistema de cobros", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
 
         Spacer(modifier = Modifier.height(48.dp))
 
         OutlinedTextField(
-            value = correo,
-            onValueChange = { correo = it },
-            label = { Text("Correo Electrónico") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = OrangeTerracotta,
-                focusedLabelColor = OrangeTerracotta,
-                cursorColor = OrangeTerracotta
-            ),
+            value = correo, onValueChange = { correo = it }, label = { Text("Correo Electrónico") },
+            modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangeTerracotta, focusedLabelColor = OrangeTerracotta, cursorColor = OrangeTerracotta),
             singleLine = true
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = OrangeTerracotta,
-                focusedLabelColor = OrangeTerracotta,
-                cursorColor = OrangeTerracotta
-            ),
+            value = password, onValueChange = { password = it }, label = { Text("Contraseña") },
+            visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangeTerracotta, focusedLabelColor = OrangeTerracotta, cursorColor = OrangeTerracotta),
             singleLine = true
         )
-
         Spacer(modifier = Modifier.height(32.dp))
-
         Button(
             onClick = {
-                if (correo.isBlank() || password.isBlank()) {
-                    Toast.makeText(context, "Por favor llena todos los campos", Toast.LENGTH_SHORT).show()
-                    return@Button
-                }
-
+                if (correo.isBlank() || password.isBlank()) { Toast.makeText(context, "Por favor llena todos los campos", Toast.LENGTH_SHORT).show(); return@Button }
                 isLoading = true
                 scope.launch {
                     val usuario = SupabaseClient.login(correo, password)
                     isLoading = false
-
-                    if (usuario != null) {
-                        Toast.makeText(context, "Bienvenido: ${usuario.nombre}", Toast.LENGTH_LONG).show()
-                        onLoginSuccess(usuario)
-                    } else {
-                        Toast.makeText(context, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show()
-                    }
+                    if (usuario != null) { Toast.makeText(context, "Bienvenido: ${usuario.nombre}", Toast.LENGTH_LONG).show(); onLoginSuccess(usuario) }
+                    else { Toast.makeText(context, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show() }
                 }
             },
-            enabled = !isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = OrangeTerracotta,
-                contentColor = Color.White
-            )
+            enabled = !isLoading, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = OrangeTerracotta, contentColor = Color.White)
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-            } else {
-                Text("Ingresar", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
+            if (isLoading) { CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp)) } else { Text("Ingresar", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         }
     }
 }
