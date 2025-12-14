@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.Usuario
+import com.example.serviciocobros.ui.cobrar.CobrarDetailScreen
+import com.example.serviciocobros.ui.cobrar.CobrarUsersScreen
 import com.example.serviciocobros.ui.debts.UserDebtsScreen
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
@@ -78,6 +80,9 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     var usuarioActual by rememberSaveable { mutableStateOf<Usuario?>(null) }
     var pantallaSecundaria by rememberSaveable { mutableStateOf<String?>(null) }
 
+    var selectedUserId by remember { mutableStateOf<Long?>(null) }
+    var selectedUserName by remember { mutableStateOf<String?>(null) }
+
     val refreshUser: suspend () -> Unit = {
         val id = usuarioActual?.id
         if (id != null) {
@@ -91,21 +96,38 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     if (usuarioActual == null) {
         LoginScreen(onLoginSuccess = { usuarioActual = it })
     } else {
-        when (pantallaSecundaria) {
-            "menu" -> {
+        when {
+            pantallaSecundaria == "menu" -> {
                 MenuScreen(onBack = { pantallaSecundaria = null })
             }
-            "anotar" -> {
+            pantallaSecundaria == "anotar" -> {
                 RegisterDebtScreen(
                     idRegistrador = usuarioActual!!.id,
                     onBack = { pantallaSecundaria = null },
                     onSuccess = { pantallaSecundaria = null }
                 )
             }
-            "mis_deudas" -> {
+            pantallaSecundaria == "mis_deudas" -> {
                 UserDebtsScreen(
                     userId = usuarioActual!!.id,
                     onBack = { pantallaSecundaria = null }
+                )
+            }
+            pantallaSecundaria == "cobrar" -> {
+                CobrarUsersScreen(
+                    onBack = { pantallaSecundaria = null },
+                    onUserSelected = { usuario ->
+                        selectedUserId = usuario.id
+                        selectedUserName = usuario.nombre
+                        pantallaSecundaria = "cobrar_detail"
+                    }
+                )
+            }
+            pantallaSecundaria == "cobrar_detail" && selectedUserId != null && selectedUserName != null -> {
+                CobrarDetailScreen(
+                    userId = selectedUserId!!,
+                    userName = selectedUserName!!,
+                    onBack = { pantallaSecundaria = "cobrar" }
                 )
             }
             else -> {
@@ -116,7 +138,8 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                         currentTheme = currentTheme,
                         onThemeChange = onThemeChange,
                         onRefresh = refreshUser,
-                        onNavigateToAnotar = { pantallaSecundaria = "anotar" }
+                        onNavigateToAnotar = { pantallaSecundaria = "anotar" },
+                        onNavigateToCobrar = { pantallaSecundaria = "cobrar" }
                     )
                 } else {
                     UserHomeScreen(

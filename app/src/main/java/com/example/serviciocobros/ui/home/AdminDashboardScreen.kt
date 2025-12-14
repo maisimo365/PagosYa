@@ -37,9 +37,9 @@ fun AdminDashboardScreen(
     currentTheme: AppTheme,
     onThemeChange: (AppTheme) -> Unit,
     onRefresh: suspend () -> Unit,
-    onNavigateToAnotar: () -> Unit
+    onNavigateToAnotar: () -> Unit,
+    onNavigateToCobrar: () -> Unit
 ) {
-    // 0 = Admin, 1 = Menú, 2 = Perfil
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
     var isRefreshing by remember { mutableStateOf(false) }
@@ -99,7 +99,8 @@ fun AdminDashboardScreen(
                 when (selectedTab) {
                     0 -> AdminHomeScreen(
                         usuario = usuario,
-                        onAnotarClick = onNavigateToAnotar
+                        onAnotarClick = onNavigateToAnotar,
+                        onCobrarClick = onNavigateToCobrar
                     )
                     1 -> AdminMenuContent(refreshTrigger = refreshTrigger)
                     2 -> ProfileScreen(
@@ -113,8 +114,6 @@ fun AdminDashboardScreen(
         }
     }
 }
-
-// --- 👇 ESTO ERA LO QUE FALTABA 👇 ---
 
 @Composable
 fun AdminMenuContent(refreshTrigger: Int) {
