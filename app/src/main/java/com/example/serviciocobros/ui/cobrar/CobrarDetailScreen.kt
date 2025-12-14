@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,11 +34,22 @@ fun CobrarDetailScreen(
     var isLoading by remember { mutableStateOf(true) }
 
     var showPaymentDialog by remember { mutableStateOf(false) }
-    var montoInput by remember { mutableStateOf("") }
     var isProcesandoPago by remember { mutableStateOf(false) }
+
+    var montoPagarInput by remember { mutableStateOf("") }
+    var efectivoRecibidoInput by remember { mutableStateOf("") }
 
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val totalDeuda = remember(deudas) { deudas.sumOf { it.saldoPendiente } }
+
+    val montoPagar = montoPagarInput.toDoubleOrNull() ?: 0.0
+    val efectivoRecibido = efectivoRecibidoInput.toDoubleOrNull() ?: 0.0
+
+    val cambio = if (efectivoRecibido >= montoPagar) efectivoRecibido - montoPagar else 0.0
+
+    val puedePagar = montoPagar > 0 && montoPagar <= totalDeuda && efectivoRecibido >= montoPagar
 
     fun cargarDeudas() {
         scope.launch {
@@ -50,8 +62,6 @@ fun CobrarDetailScreen(
     LaunchedEffect(Unit) {
         cargarDeudas()
     }
-
-    val totalDeuda = remember(deudas) { deudas.sumOf { it.saldoPendiente } }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -73,9 +83,13 @@ fun CobrarDetailScreen(
         floatingActionButton = {
             if (!isLoading && totalDeuda > 0) {
                 ExtendedFloatingActionButton(
-                    onClick = { showPaymentDialog = true },
+                    onClick = {
+                        montoPagarInput = ""
+                        efectivoRecibidoInput = ""
+                        showPaymentDialog = true
+                    },
                     icon = { Icon(Icons.Default.AttachMoney, contentDescription = null) },
-                    text = { Text("REGISTRAR PAGO") },
+                    text = { Text("COBRAR") },
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             }
@@ -133,52 +147,118 @@ fun CobrarDetailScreen(
         if (showPaymentDialog) {
             AlertDialog(
                 onDismissRequest = { if (!isProcesandoPago) showPaymentDialog = false },
+                icon = { Icon(Icons.Default.Calculate, contentDescription = null) },
                 title = { Text("Registrar Pago") },
                 text = {
-                    Column {
-                        Text("Ingrese el monto a pagar. Se descontará automáticamente de las deudas más antiguas.")
-                        Spacer(modifier = Modifier.height(16.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Ingrese los montos manualmente.", style = MaterialTheme.typography.bodySmall)
+
                         OutlinedTextField(
-                            value = montoInput,
-                            onValueChange = { newValue ->
-                                if (newValue.all { it.isDigit() || it == '.' } && newValue.count { it == '.' } <= 1) {
-                                    montoInput = newValue
+                            value = efectivoRecibidoInput,
+                            onValueChange = { input ->
+                                if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) {
+                                    efectivoRecibidoInput = input
                                 }
                             },
-                            label = { Text("Monto (Bs.)") },
+                            label = { Text("Efectivo Recibido (Bs.)") },
+                            placeholder = { Text("Ej: 200") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                focusedLabelColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = montoPagarInput,
+                            onValueChange = { input ->
+                                if (input.all { char -> char.isDigit() || char == '.' } && input.count { it == '.' } <= 1) {
+                                    montoPagarInput = input
+                                }
+                            },
+                            label = { Text("Monto a Cobrar (Bs.)") },
+                            placeholder = { Text("Monto a cobrar de la deuda") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.fillMaxWidth()
                         )
+
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (cambio >= 0 && efectivoRecibido >= montoPagar && montoPagar > 0)
+                                    Color(0xFFE8F5E9)
+                                else
+                                    Color(0xFFF5F5F5)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "CAMBIO A DAR:",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Bs. ${String.format("%.2f", cambio)}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (cambio >= 0 && efectivoRecibido >= montoPagar && montoPagar > 0)
+                                        Color(0xFF2E7D32)
+                                    else
+                                        Color.Gray
+                                )
+                            }
+                        }
+
+                        if (montoPagar > totalDeuda) {
+                            Text(
+                                "El monto excede la deuda total (Bs. $totalDeuda)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        } else if (montoPagar > efectivoRecibido && efectivoRecibido > 0) {
+                            Text(
+                                "Falta efectivo para cubrir el monto.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 },
                 confirmButton = {
                     Button(
                         onClick = {
-                            val monto = montoInput.toDoubleOrNull()
-                            if (monto != null && monto > 0) {
-                                scope.launch {
-                                    isProcesandoPago = true
-                                    val exito = SupabaseClient.registrarPago(userId, cobradorId, monto)
+                            scope.launch {
+                                isProcesandoPago = true
+                                val exito = SupabaseClient.registrarPago(userId, cobradorId, montoPagar)
 
-                                    if (exito) {
-                                        snackbarHostState.showSnackbar("Pago registrado con éxito")
-                                        montoInput = ""
-                                        showPaymentDialog = false
-                                        cargarDeudas()
-                                    } else {
-                                        snackbarHostState.showSnackbar("Error al procesar el pago")
-                                    }
-                                    isProcesandoPago = false
+                                if (exito) {
+                                    snackbarHostState.showSnackbar("Pago registrado. Cambio: Bs. ${String.format("%.2f", cambio)}")
+                                    showPaymentDialog = false
+                                    cargarDeudas()
+                                } else {
+                                    snackbarHostState.showSnackbar("Error al procesar el pago")
                                 }
+                                isProcesandoPago = false
                             }
                         },
-                        enabled = !isProcesandoPago && montoInput.isNotEmpty()
+                        enabled = !isProcesandoPago && puedePagar,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
                         if (isProcesandoPago) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
                         } else {
-                            Text("Confirmar")
+                            Text("Confirmar Pago")
                         }
                     }
                 },
