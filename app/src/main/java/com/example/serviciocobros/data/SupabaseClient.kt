@@ -13,6 +13,7 @@ import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.realtime.Realtime
 import com.example.serviciocobros.data.model.PagoInsert
 import kotlin.math.min
+import com.example.serviciocobros.data.model.PagoHistorico
 
 object SupabaseClient {
     //Conexion con supabase
@@ -169,6 +170,22 @@ object SupabaseClient {
         } catch (e: Exception) {
             println("Error al registrar pago: ${e.message}")
             false
+        }
+    }
+    // Funcion para obtener historial de pagos de la BD
+    suspend fun obtenerHistorialPagos(idUsuario: Long): List<PagoHistorico> {
+        return try {
+            val columns = Columns.raw("*, deudas(fecha_consumo, platos(nombre_plato, foto_plato))")
+
+            client.from("pagos").select(columns = columns) {
+                filter {
+                    eq("id_consumidor", idUsuario)
+                }
+                order("fecha_pago", Order.DESCENDING)
+            }.decodeList<PagoHistorico>()
+        } catch (e: Exception) {
+            println("Error historial: ${e.message}")
+            emptyList()
         }
     }
 }

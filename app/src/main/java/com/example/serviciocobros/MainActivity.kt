@@ -14,7 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable // Importante importar esto
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,6 +34,7 @@ import com.example.serviciocobros.ui.cobrar.CobrarDetailScreen
 import com.example.serviciocobros.ui.cobrar.CobrarUsersScreen
 import com.example.serviciocobros.ui.debts.UserDebtsScreen
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
+import com.example.serviciocobros.ui.home.PaymentHistoryScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
 import com.example.serviciocobros.ui.home.UserHomeScreen
 import com.example.serviciocobros.ui.menu.MenuScreen
@@ -100,17 +101,24 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
             pantallaSecundaria == "menu" -> {
                 MenuScreen(onBack = { pantallaSecundaria = null })
             }
+            pantallaSecundaria == "mis_deudas" -> {
+                UserDebtsScreen(
+                    userId = usuarioActual!!.id,
+                    onBack = { pantallaSecundaria = null }
+                )
+            }
+            pantallaSecundaria == "historial_pagos" -> {
+                PaymentHistoryScreen(
+                    userId = usuarioActual!!.id,
+                    onBack = { pantallaSecundaria = null }
+                )
+            }
+
             pantallaSecundaria == "anotar" -> {
                 RegisterDebtScreen(
                     idRegistrador = usuarioActual!!.id,
                     onBack = { pantallaSecundaria = null },
                     onSuccess = { pantallaSecundaria = null }
-                )
-            }
-            pantallaSecundaria == "mis_deudas" -> {
-                UserDebtsScreen(
-                    userId = usuarioActual!!.id,
-                    onBack = { pantallaSecundaria = null }
                 )
             }
             pantallaSecundaria == "cobrar" -> {
@@ -130,6 +138,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                     onBack = { pantallaSecundaria = "cobrar" }
                 )
             }
+
             else -> {
                 if (usuarioActual!!.esAdmin) {
                     AdminDashboardScreen(
@@ -147,6 +156,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                         onLogout = { usuarioActual = null },
                         onVerMenu = { pantallaSecundaria = "menu" },
                         onVerDeudas = { pantallaSecundaria = "mis_deudas" },
+                        onVerHistorial = { pantallaSecundaria = "historial_pagos" },
                         currentTheme = currentTheme,
                         onThemeChange = onThemeChange,
                         onRefresh = refreshUser

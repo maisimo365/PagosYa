@@ -37,3 +37,23 @@ data class PagoInsert(
     @SerialName("tipo_pago") val tipoPago: String, // 'completo' o 'parcial'
     @SerialName("metodo_pago") val metodoPago: String = "efectivo"
 )
+
+@Serializable
+data class PlatoConFoto(
+    @SerialName("nombre_plato") val nombre: String,
+    @SerialName("foto_plato") val foto: String? = null
+)
+
+@Serializable
+data class DeudaDetalle(
+    @SerialName("fecha_consumo") val fechaConsumo: String,
+    val platos: PlatoConFoto? = null
+)
+
+@Serializable
+data class PagoHistorico(
+    @SerialName("id_pago") val id: Long,
+    @SerialName("monto_pagado") val montoPagado: Double,
+    @SerialName("fecha_pago") val fechaPago: String,
+    val deudas: DeudaDetalle? = null // Relación anidada
+)
