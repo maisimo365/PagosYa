@@ -36,7 +36,8 @@ fun AdminDashboardScreen(
     onLogout: () -> Unit,
     currentTheme: AppTheme,
     onThemeChange: (AppTheme) -> Unit,
-    onRefresh: suspend () -> Unit
+    onRefresh: suspend () -> Unit,
+    onNavigateToAnotar: () -> Unit
 ) {
     // 0 = Admin, 1 = Menú, 2 = Perfil
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
@@ -44,7 +45,6 @@ fun AdminDashboardScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val pullState = rememberPullToRefreshState()
     val scope = rememberCoroutineScope()
-
     var refreshTrigger by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -67,7 +67,6 @@ fun AdminDashboardScreen(
                     selected = selectedTab == 0,
                     onClick = { selectedTab = 0 }
                 )
-                // 👇 NUEVA PESTAÑA MENÚ
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.RestaurantMenu, contentDescription = null) },
                     label = { Text("Menú") },
@@ -98,7 +97,10 @@ fun AdminDashboardScreen(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 when (selectedTab) {
-                    0 -> AdminHomeScreen(usuario = usuario)
+                    0 -> AdminHomeScreen(
+                        usuario = usuario,
+                        onAnotarClick = onNavigateToAnotar
+                    )
                     1 -> AdminMenuContent(refreshTrigger = refreshTrigger)
                     2 -> ProfileScreen(
                         usuario = usuario,
@@ -111,6 +113,8 @@ fun AdminDashboardScreen(
         }
     }
 }
+
+// --- 👇 ESTO ERA LO QUE FALTABA 👇 ---
 
 @Composable
 fun AdminMenuContent(refreshTrigger: Int) {

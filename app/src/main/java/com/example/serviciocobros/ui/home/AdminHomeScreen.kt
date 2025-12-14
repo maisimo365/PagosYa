@@ -16,10 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.serviciocobros.data.model.Usuario
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminHomeScreen(
-    usuario: Usuario
+    usuario: Usuario,
+    onAnotarClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -47,18 +47,19 @@ fun AdminHomeScreen(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
 
             AdminBigButton(
-                text = "Añadir Deuda",
-                icon = Icons.Default.MoneyOff,
+                text = "Anotar",
+                icon = Icons.Default.EditNote,
                 color = Color(0xFFD32F2F),
                 modifier = Modifier.weight(1f),
-                onClick = { /* TODO */ }
+                onClick = onAnotarClick
             )
+
             AdminBigButton(
                 text = "Registrar Pago",
                 icon = Icons.Default.AttachMoney,
                 color = Color(0xFF388E3C),
                 modifier = Modifier.weight(1f),
-                onClick = { /* TODO */ }
+                onClick = { /* TODO: Futuro */ }
             )
         }
 

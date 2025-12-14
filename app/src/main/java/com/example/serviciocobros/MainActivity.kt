@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.Usuario
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
+import com.example.serviciocobros.ui.home.RegisterDebtScreen
 import com.example.serviciocobros.ui.home.UserHomeScreen
 import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
@@ -80,35 +81,44 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
         val id = usuarioActual?.id
         if (id != null) {
             val actualizado = SupabaseClient.obtenerUsuarioPorId(id)
-            if (actualizado != null) {
-                usuarioActual = actualizado
-            }
+            if (actualizado != null) usuarioActual = actualizado
         }
     }
 
     if (usuarioActual == null) {
         LoginScreen(onLoginSuccess = { usuarioActual = it })
     } else {
-        if (pantallaSecundaria == "menu") {
-            MenuScreen(onBack = { pantallaSecundaria = null })
-        } else {
-            if (usuarioActual!!.esAdmin) {
-                AdminDashboardScreen(
-                    usuario = usuarioActual!!,
-                    onLogout = { usuarioActual = null },
-                    currentTheme = currentTheme,
-                    onThemeChange = onThemeChange,
-                    onRefresh = refreshUser
+        when (pantallaSecundaria) {
+            "menu" -> {
+                MenuScreen(onBack = { pantallaSecundaria = null })
+            }
+            "anotar" -> { // <--- RUTA NUEVA
+                RegisterDebtScreen(
+                    idRegistrador = usuarioActual!!.id,
+                    onBack = { pantallaSecundaria = null },
+                    onSuccess = { pantallaSecundaria = null }
                 )
-            } else {
-                UserHomeScreen(
-                    usuario = usuarioActual!!,
-                    onLogout = { usuarioActual = null },
-                    onVerMenu = { pantallaSecundaria = "menu" },
-                    currentTheme = currentTheme,
-                    onThemeChange = onThemeChange,
-                    onRefresh = refreshUser
-                )
+            }
+            else -> {
+                if (usuarioActual!!.esAdmin) {
+                    AdminDashboardScreen(
+                        usuario = usuarioActual!!,
+                        onLogout = { usuarioActual = null },
+                        currentTheme = currentTheme,
+                        onThemeChange = onThemeChange,
+                        onRefresh = refreshUser,
+                        onNavigateToAnotar = { pantallaSecundaria = "anotar" } // <--- Pasamos la navegación
+                    )
+                } else {
+                    UserHomeScreen(
+                        usuario = usuarioActual!!,
+                        onLogout = { usuarioActual = null },
+                        onVerMenu = { pantallaSecundaria = "menu" },
+                        currentTheme = currentTheme,
+                        onThemeChange = onThemeChange,
+                        onRefresh = refreshUser
+                    )
+                }
             }
         }
     }
@@ -137,9 +147,7 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
         Image(
             painter = painterResource(id = R.drawable.logo_pagosya),
             contentDescription = "Logo PagosYa",
-            modifier = Modifier
-                .width(140.dp)
-                .heightIn(max = 120.dp),
+            modifier = Modifier.width(140.dp).heightIn(max = 120.dp),
             contentScale = ContentScale.Fit
         )
 
