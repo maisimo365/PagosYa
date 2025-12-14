@@ -14,7 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveable // Importante importar esto
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -80,8 +80,8 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     var usuarioActual by rememberSaveable { mutableStateOf<Usuario?>(null) }
     var pantallaSecundaria by rememberSaveable { mutableStateOf<String?>(null) }
 
-    var selectedUserId by remember { mutableStateOf<Long?>(null) }
-    var selectedUserName by remember { mutableStateOf<String?>(null) }
+    var selectedUserId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var selectedUserName by rememberSaveable { mutableStateOf<String?>(null) }
 
     val refreshUser: suspend () -> Unit = {
         val id = usuarioActual?.id
