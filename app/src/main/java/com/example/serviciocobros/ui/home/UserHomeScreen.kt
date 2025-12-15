@@ -1,5 +1,6 @@
 package com.example.serviciocobros.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -32,12 +33,16 @@ fun UserHomeScreen(
     onLogout: () -> Unit,
     onVerMenu: () -> Unit,
     onVerDeudas: () -> Unit,
-    currentTheme: AppTheme,
     onVerHistorial: () -> Unit,
+    currentTheme: AppTheme,
     onThemeChange: (AppTheme) -> Unit,
     onRefresh: suspend () -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    BackHandler(enabled = selectedTab != 0) {
+        selectedTab = 0
+    }
 
     var isRefreshing by remember { mutableStateOf(false) }
     val pullState = rememberPullToRefreshState()
@@ -80,7 +85,12 @@ fun UserHomeScreen(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (selectedTab == 0) {
-                    UserHomeContent(usuario = usuario, onVerMenu = onVerMenu, onVerDeudas = onVerDeudas, onVerHistorial = onVerHistorial)
+                    UserHomeContent(
+                        usuario = usuario,
+                        onVerMenu = onVerMenu,
+                        onVerDeudas = onVerDeudas,
+                        onVerHistorial = onVerHistorial
+                    )
                 } else {
                     ProfileScreen(
                         usuario = usuario,

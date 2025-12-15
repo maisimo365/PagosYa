@@ -40,6 +40,7 @@ import com.example.serviciocobros.ui.home.UserHomeScreen
 import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
+import androidx.activity.compose.BackHandler
 
 val OrangeTerracotta = Color(0xFFF2994A)
 val GreenEmerald = Color(0xFF27AE60)
@@ -97,6 +98,11 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     if (usuarioActual == null) {
         LoginScreen(onLoginSuccess = { usuarioActual = it })
     } else {
+
+        BackHandler(enabled = pantallaSecundaria != "cobrar_detail" && pantallaSecundaria != null) {
+            pantallaSecundaria = null
+        }
+
         when {
             pantallaSecundaria == "menu" -> {
                 MenuScreen(onBack = { pantallaSecundaria = null })
@@ -132,6 +138,9 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                 )
             }
             pantallaSecundaria == "cobrar_detail" && selectedUserId != null && selectedUserName != null -> {
+                BackHandler(enabled = true) {
+                    pantallaSecundaria = "cobrar"
+                }
                 CobrarDetailScreen(
                     userId = selectedUserId!!,
                     userName = selectedUserName!!,

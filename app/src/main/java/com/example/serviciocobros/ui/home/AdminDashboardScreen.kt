@@ -1,5 +1,6 @@
 package com.example.serviciocobros.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,6 +42,10 @@ fun AdminDashboardScreen(
     onNavigateToCobrar: () -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    BackHandler(enabled = selectedTab != 0) {
+        selectedTab = 0
+    }
 
     var isRefreshing by remember { mutableStateOf(false) }
     val pullState = rememberPullToRefreshState()
