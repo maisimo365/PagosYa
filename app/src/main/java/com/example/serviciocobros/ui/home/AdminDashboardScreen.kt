@@ -1,5 +1,6 @@
 package com.example.serviciocobros.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,10 +38,14 @@ fun AdminDashboardScreen(
     currentTheme: AppTheme,
     onThemeChange: (AppTheme) -> Unit,
     onRefresh: suspend () -> Unit,
-    onNavigateToAnotar: () -> Unit
+    onNavigateToAnotar: () -> Unit,
+    onNavigateToCobrar: () -> Unit
 ) {
-    // 0 = Admin, 1 = Menú, 2 = Perfil
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+
+    BackHandler(enabled = selectedTab != 0) {
+        selectedTab = 0
+    }
 
     var isRefreshing by remember { mutableStateOf(false) }
     val pullState = rememberPullToRefreshState()
@@ -99,7 +104,8 @@ fun AdminDashboardScreen(
                 when (selectedTab) {
                     0 -> AdminHomeScreen(
                         usuario = usuario,
-                        onAnotarClick = onNavigateToAnotar
+                        onAnotarClick = onNavigateToAnotar,
+                        onCobrarClick = onNavigateToCobrar
                     )
                     1 -> AdminMenuContent(refreshTrigger = refreshTrigger)
                     2 -> ProfileScreen(
@@ -113,8 +119,6 @@ fun AdminDashboardScreen(
         }
     }
 }
-
-// --- 👇 ESTO ERA LO QUE FALTABA 👇 ---
 
 @Composable
 fun AdminMenuContent(refreshTrigger: Int) {

@@ -19,7 +19,8 @@ import com.example.serviciocobros.data.model.Usuario
 @Composable
 fun AdminHomeScreen(
     usuario: Usuario,
-    onAnotarClick: () -> Unit
+    onAnotarClick: () -> Unit,
+    onCobrarClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -55,11 +56,11 @@ fun AdminHomeScreen(
             )
 
             AdminBigButton(
-                text = "Registrar Pago",
+                text = "Cobrar",
                 icon = Icons.Default.AttachMoney,
                 color = Color(0xFF388E3C),
                 modifier = Modifier.weight(1f),
-                onClick = { /* TODO: Futuro */ }
+                onClick = onCobrarClick
             )
         }
 
@@ -68,9 +69,9 @@ fun AdminHomeScreen(
         Text("Gestión", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
 
-        AdminOptionItem(icon = Icons.Default.Restaurant, title = "Añadir Plato") { /* TODO */ }
-        AdminOptionItem(icon = Icons.Default.Edit, title = "Editar Plato") { /* TODO */ }
-        AdminOptionItem(icon = Icons.Default.PersonAdd, title = "Añadir Usuario") { /* TODO */ }
+        AdminOptionItem(icon = Icons.Default.Restaurant, title = "Añadir Plato") { }
+        AdminOptionItem(icon = Icons.Default.Edit, title = "Editar Plato") { }
+        AdminOptionItem(icon = Icons.Default.PersonAdd, title = "Añadir Usuario") { }
     }
 }
 

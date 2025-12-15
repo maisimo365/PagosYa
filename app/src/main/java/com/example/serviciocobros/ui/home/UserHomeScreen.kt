@@ -1,5 +1,6 @@
 package com.example.serviciocobros.ui.home
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -32,13 +33,17 @@ fun UserHomeScreen(
     onLogout: () -> Unit,
     onVerMenu: () -> Unit,
     onVerDeudas: () -> Unit,
+    onVerHistorial: () -> Unit,
     currentTheme: AppTheme,
     onThemeChange: (AppTheme) -> Unit,
     onRefresh: suspend () -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
-    // Estado local para el refresco
+    BackHandler(enabled = selectedTab != 0) {
+        selectedTab = 0
+    }
+
     var isRefreshing by remember { mutableStateOf(false) }
     val pullState = rememberPullToRefreshState()
     val scope = rememberCoroutineScope()
@@ -80,7 +85,12 @@ fun UserHomeScreen(
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (selectedTab == 0) {
-                    UserHomeContent(usuario = usuario, onVerMenu = onVerMenu, onVerDeudas = onVerDeudas)
+                    UserHomeContent(
+                        usuario = usuario,
+                        onVerMenu = onVerMenu,
+                        onVerDeudas = onVerDeudas,
+                        onVerHistorial = onVerHistorial
+                    )
                 } else {
                     ProfileScreen(
                         usuario = usuario,
@@ -98,12 +108,13 @@ fun UserHomeScreen(
 fun UserHomeContent(
     usuario: Usuario,
     onVerMenu: () -> Unit,
-    onVerDeudas: () -> Unit
+    onVerDeudas: () -> Unit,
+    onVerHistorial: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()) // Scroll necesario
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -135,7 +146,7 @@ fun UserHomeContent(
             descripcion = "Ver historial de transacciones",
             icono = Icons.Default.History,
             colorIcono = Color(0xFF1976D2),
-            onClick = { /* TODO: Navegar a Historial */ }
+            onClick = onVerHistorial
         )
 
         Spacer(modifier = Modifier.height(16.dp))
