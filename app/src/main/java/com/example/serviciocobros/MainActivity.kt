@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -33,6 +34,7 @@ import com.example.serviciocobros.data.model.Usuario
 import com.example.serviciocobros.ui.cobrar.CobrarDetailScreen
 import com.example.serviciocobros.ui.cobrar.CobrarUsersScreen
 import com.example.serviciocobros.ui.debts.UserDebtsScreen
+import com.example.serviciocobros.ui.home.AddDishScreen
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
 import com.example.serviciocobros.ui.home.PaymentHistoryScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
@@ -40,7 +42,6 @@ import com.example.serviciocobros.ui.home.UserHomeScreen
 import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
-import androidx.activity.compose.BackHandler
 
 val OrangeTerracotta = Color(0xFFF2994A)
 val GreenEmerald = Color(0xFF27AE60)
@@ -82,6 +83,8 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     var usuarioActual by rememberSaveable { mutableStateOf<Usuario?>(null) }
     var pantallaSecundaria by rememberSaveable { mutableStateOf<String?>(null) }
 
+    var adminSelectedTab by rememberSaveable { mutableIntStateOf(0) }
+
     var selectedUserId by rememberSaveable { mutableStateOf<Long?>(null) }
     var selectedUserName by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -89,9 +92,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
         val id = usuarioActual?.id
         if (id != null) {
             val actualizado = SupabaseClient.obtenerUsuarioPorId(id)
-            if (actualizado != null) {
-                usuarioActual = actualizado
-            }
+            if (actualizado != null) usuarioActual = actualizado
         }
     }
 
@@ -99,7 +100,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
         LoginScreen(onLoginSuccess = { usuarioActual = it })
     } else {
 
-        BackHandler(enabled = pantallaSecundaria != "cobrar_detail" && pantallaSecundaria != null) {
+        BackHandler(enabled = pantallaSecundaria != null) {
             pantallaSecundaria = null
         }
 
@@ -120,6 +121,15 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                 )
             }
 
+            pantallaSecundaria == "agregar_plato" -> {
+                AddDishScreen(
+                    onBack = { pantallaSecundaria = null },
+                    onDishAdded = {
+                        pantallaSecundaria = null
+                    }
+                )
+            }
+
             pantallaSecundaria == "anotar" -> {
                 RegisterDebtScreen(
                     idRegistrador = usuarioActual!!.id,
@@ -127,6 +137,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                     onSuccess = { pantallaSecundaria = null }
                 )
             }
+
             pantallaSecundaria == "cobrar" -> {
                 CobrarUsersScreen(
                     onBack = { pantallaSecundaria = null },
@@ -137,7 +148,8 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                     }
                 )
             }
-            pantallaSecundaria == "cobrar_detail" && selectedUserId != null && selectedUserName != null -> {
+
+            pantallaSecundaria == "cobrar_detail" && selectedUserId != null -> {
                 BackHandler(enabled = true) {
                     pantallaSecundaria = "cobrar"
                 }
@@ -157,7 +169,10 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                         onThemeChange = onThemeChange,
                         onRefresh = refreshUser,
                         onNavigateToAnotar = { pantallaSecundaria = "anotar" },
-                        onNavigateToCobrar = { pantallaSecundaria = "cobrar" }
+                        onNavigateToCobrar = { pantallaSecundaria = "cobrar" },
+                        onNavigateToAddPlato = { pantallaSecundaria = "agregar_plato" },
+                        selectedTab = adminSelectedTab,
+                        onTabSelected = { adminSelectedTab = it }
                     )
                 } else {
                     UserHomeScreen(

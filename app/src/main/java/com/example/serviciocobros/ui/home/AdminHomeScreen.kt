@@ -20,7 +20,8 @@ import com.example.serviciocobros.data.model.Usuario
 fun AdminHomeScreen(
     usuario: Usuario,
     onAnotarClick: () -> Unit,
-    onCobrarClick: () -> Unit
+    onCobrarClick: () -> Unit,
+    onAddPlatoClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -46,7 +47,6 @@ fun AdminHomeScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-
             AdminBigButton(
                 text = "Anotar",
                 icon = Icons.Default.EditNote,
@@ -54,7 +54,6 @@ fun AdminHomeScreen(
                 modifier = Modifier.weight(1f),
                 onClick = onAnotarClick
             )
-
             AdminBigButton(
                 text = "Cobrar",
                 icon = Icons.Default.AttachMoney,
@@ -69,7 +68,8 @@ fun AdminHomeScreen(
         Text("Gestión", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
 
-        AdminOptionItem(icon = Icons.Default.Restaurant, title = "Añadir Plato") { }
+        AdminOptionItem(icon = Icons.Default.Restaurant, title = "Añadir Plato") { onAddPlatoClick() }
+
         AdminOptionItem(icon = Icons.Default.Edit, title = "Editar Plato") { }
         AdminOptionItem(icon = Icons.Default.PersonAdd, title = "Añadir Usuario") { }
     }

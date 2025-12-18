@@ -1,9 +1,11 @@
 package com.example.serviciocobros.ui.cobrar
 
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -27,7 +29,6 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import androidx.activity.compose.BackHandler
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,6 +41,7 @@ fun CobrarDetailScreen(
     BackHandler {
         onBack()
     }
+
     val cobradorId = 1L
 
     var deudas by remember { mutableStateOf<List<Deuda>>(emptyList()) }
@@ -343,7 +345,6 @@ fun SemanaCard(lunesInicio: LocalDate, deudasSemana: List<Deuda>) {
                                     verticalAlignment = Alignment.Top,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-
                                     Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                                         Text(
                                             text = tituloMostrar,

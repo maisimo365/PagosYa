@@ -10,3 +10,11 @@ data class Plato(
     val precio: Double,
     @SerialName("foto_plato") val fotoUrl: String? = null,
 )
+
+@Serializable
+data class PlatoInsert(
+    @SerialName("nombre_plato") val nombre: String,
+    val precio: Double,
+    @SerialName("foto_plato") val fotoUrl: String? = null,
+    val activo: Boolean = true
+)
