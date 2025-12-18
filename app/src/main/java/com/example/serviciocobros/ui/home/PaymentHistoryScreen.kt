@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -26,7 +28,9 @@ import coil.compose.AsyncImage
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.PagoHistorico
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -42,12 +46,24 @@ fun PaymentHistoryScreen(
     BackHandler {
         onBack()
     }
+
     var pagos by remember { mutableStateOf<List<PagoHistorico>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     val scope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
     val pullState = rememberPullToRefreshState()
+    var showDateRangePicker by remember { mutableStateOf(false) }
+    val dateRangePickerState = rememberDateRangePickerState()
+
+    val startDate = dateRangePickerState.selectedStartDateMillis?.let {
+        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+    }
+    val endDate = dateRangePickerState.selectedEndDateMillis?.let {
+        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+    }
+
+    val hayFiltroActivo = startDate != null && endDate != null
 
     fun cargarHistorial() {
         scope.launch {
@@ -61,10 +77,25 @@ fun PaymentHistoryScreen(
         cargarHistorial()
     }
 
-    val pagosPorDia = remember(pagos) {
-        if (pagos.isEmpty()) emptyMap()
+    val pagosFiltrados = remember(pagos, startDate, endDate) {
+        if (hayFiltroActivo) {
+            pagos.filter { pago ->
+                try {
+                    val fechaPago = ZonedDateTime.parse(pago.fechaPago).toLocalDate()
+                    !fechaPago.isBefore(startDate) && !fechaPago.isAfter(endDate)
+                } catch (e: Exception) {
+                    false
+                }
+            }
+        } else {
+            pagos
+        }
+    }
+
+    val pagosPorDia = remember(pagosFiltrados) {
+        if (pagosFiltrados.isEmpty()) emptyMap()
         else {
-            pagos.groupBy { pago ->
+            pagosFiltrados.groupBy { pago ->
                 try {
                     ZonedDateTime.parse(pago.fechaPago).toLocalDate()
                 } catch (e: Exception) {
@@ -74,13 +105,43 @@ fun PaymentHistoryScreen(
         }
     }
 
+    val totalPeriodo = remember(pagosFiltrados) { pagosFiltrados.sumOf { it.montoPagado } }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial de Pagos") },
+                title = {
+                    Column {
+                        Text("Historial de Pagos")
+                        if (hayFiltroActivo) {
+                            val formato = DateTimeFormatter.ofPattern("dd/MM")
+                            Text(
+                                text = "Del ${startDate?.format(formato)} al ${endDate?.format(formato)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+                actions = {
+                    if (hayFiltroActivo) {
+                        IconButton(onClick = {
+                            dateRangePickerState.setSelection(null, null)
+                        }) {
+                            Icon(Icons.Default.Close, contentDescription = "Limpiar filtro", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                    IconButton(onClick = { showDateRangePicker = true }) {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Filtrar por fecha",
+                            tint = if (hayFiltroActivo) MaterialTheme.colorScheme.primary else LocalContentColor.current
+                        )
                     }
                 }
             )
@@ -104,17 +165,71 @@ fun PaymentHistoryScreen(
                         Text("No tienes pagos registrados aún.", color = Color.Gray)
                     }
                 }
+            } else if (pagosFiltrados.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.DateRange, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("No hay pagos en estas fechas.", color = Color.Gray)
+                    }
+                }
             } else {
                 LazyColumn(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    if (hayFiltroActivo) {
+                        item {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Total en periodo:", fontWeight = FontWeight.Bold)
+                                    Text("Bs. ${String.format("%.2f", totalPeriodo)}", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
+                                }
+                            }
+                        }
+                    }
+
                     pagosPorDia.forEach { (diaPago, listaPagos) ->
                         item {
                             HistorialDiaCard(diaPago, listaPagos)
                         }
                     }
                 }
+            }
+        }
+
+        if (showDateRangePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDateRangePicker = false },
+                confirmButton = {
+                    TextButton(onClick = { showDateRangePicker = false }) {
+                        Text("Aplicar")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDateRangePicker = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            ) {
+                DateRangePicker(
+                    state = dateRangePickerState,
+                    title = {
+                        Text(
+                            text = "Seleccionar rango de fechas",
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    },
+                    modifier = Modifier.height(500.dp)
+                )
             }
         }
     }
