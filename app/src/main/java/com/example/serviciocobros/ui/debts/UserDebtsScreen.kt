@@ -25,6 +25,7 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.activity.compose.BackHandler
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,6 +34,9 @@ fun UserDebtsScreen(
     userId: Long,
     onBack: () -> Unit
 ) {
+    BackHandler {
+        onBack()
+    }
     var deudas by remember { mutableStateOf<List<Deuda>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -168,22 +172,26 @@ fun SemanaCardClient(lunesInicio: LocalDate, deudasSemana: List<Deuda>) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text("Semana:", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     Text(
                         text = "${lunesInicio.format(formateadorTitulo)} - ${domingoFin.format(formateadorTitulo)}",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
                 Column(horizontalAlignment = Alignment.End) {
                     Text("Total Semana", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     Text(
                         text = "Bs. ${String.format("%.2f", subtotalSemana)}",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
                     )
                 }
             }
@@ -209,8 +217,10 @@ fun SemanaCardClient(lunesInicio: LocalDate, deudasSemana: List<Deuda>) {
                         fontWeight = FontWeight.Bold,
                         color = if (deudasDelDia.isNotEmpty()) MaterialTheme.colorScheme.onSurface else Color.Gray,
                         modifier = Modifier
-                            .width(90.dp)
-                            .padding(end = 4.dp)
+                            .width(85.dp)
+                            .padding(end = 4.dp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Column(modifier = Modifier.weight(1f)) {
@@ -230,29 +240,24 @@ fun SemanaCardClient(lunesInicio: LocalDate, deudasSemana: List<Deuda>) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.Top
                                 ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .padding(end = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
+                                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                                         Text(
                                             text = tituloMostrar,
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium,
-                                            maxLines = 1,
+                                            maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
                                         )
 
                                         if (esDeudaParcial) {
                                             Text(
-                                                text = " | Original= Bs. ${String.format("%.2f", deuda.monto)}",
+                                                text = "Orig: Bs. ${String.format("%.2f", deuda.monto)}",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = Color.Gray,
-                                                modifier = Modifier.padding(start = 4.dp),
-                                                maxLines = 1
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
                                     }
@@ -261,7 +266,8 @@ fun SemanaCardClient(lunesInicio: LocalDate, deudasSemana: List<Deuda>) {
                                         text = "Bs. ${String.format("%.2f", deuda.saldoPendiente)}",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFD32F2F)
+                                        color = Color(0xFFD32F2F),
+                                        maxLines = 1
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))

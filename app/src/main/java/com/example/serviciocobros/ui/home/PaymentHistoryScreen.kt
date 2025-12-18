@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,6 +30,7 @@ import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.activity.compose.BackHandler
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +39,9 @@ fun PaymentHistoryScreen(
     userId: Long,
     onBack: () -> Unit
 ) {
+    BackHandler {
+        onBack()
+    }
     var pagos by remember { mutableStateOf<List<PagoHistorico>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
@@ -136,7 +139,7 @@ fun HistorialDiaCard(diaPago: LocalDate, listaPagos: List<PagoHistorico>) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Pagado el:",
                         style = MaterialTheme.typography.labelSmall,
@@ -146,9 +149,12 @@ fun HistorialDiaCard(diaPago: LocalDate, listaPagos: List<PagoHistorico>) {
                         text = diaPago.format(formateadorFecha).replaceFirstChar { it.uppercase() },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
+                Spacer(modifier = Modifier.width(8.dp))
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = "Total Pagado",
@@ -159,7 +165,8 @@ fun HistorialDiaCard(diaPago: LocalDate, listaPagos: List<PagoHistorico>) {
                         text = "Bs. ${String.format("%.2f", totalDia)}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
                     )
                 }
             }
@@ -177,7 +184,7 @@ fun HistorialDiaCard(diaPago: LocalDate, listaPagos: List<PagoHistorico>) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     if (plato?.foto != null) {
                         AsyncImage(
@@ -212,23 +219,28 @@ fun HistorialDiaCard(diaPago: LocalDate, listaPagos: List<PagoHistorico>) {
                             text = plato?.nombre ?: "Pago de deuda",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                         if (fechaConsumoStr.isNotEmpty()) {
                             Text(
                                 text = "Consumido el $fechaConsumoStr",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
+                                color = Color.Gray,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
                         text = "Bs. ${String.format("%.2f", pago.montoPagado)}",
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2E7D32)
+                        color = Color(0xFF2E7D32),
+                        maxLines = 1
                     )
                 }
 
