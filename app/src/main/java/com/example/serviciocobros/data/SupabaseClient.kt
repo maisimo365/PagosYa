@@ -210,10 +210,10 @@ object SupabaseClient {
             val bucket = client.storage.from("platos")
             val fileName = "plato_${System.currentTimeMillis()}.jpg"
 
-            // CORRECCIÓN AQUÍ: upsert se pasa como parámetro, sin llaves {}
-            bucket.upload(fileName, byteArray, upsert = false)
+            bucket.upload(fileName, byteArray) {
+                upsert = false
+            }
 
-            // Obtener URL pública
             bucket.publicUrl(fileName)
         } catch (e: Exception) {
             println("Error subiendo imagen: ${e.message}")
