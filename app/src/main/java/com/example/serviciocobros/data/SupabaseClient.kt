@@ -14,6 +14,10 @@ import io.github.jan.supabase.realtime.Realtime
 import com.example.serviciocobros.data.model.PagoInsert
 import kotlin.math.min
 import com.example.serviciocobros.data.model.PagoHistorico
+import com.example.serviciocobros.data.model.PlatoInsert
+import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.storage
+import io.github.jan.supabase.storage.upload
 
 object SupabaseClient {
     //Conexion con supabase
@@ -26,6 +30,7 @@ object SupabaseClient {
     ) {
         install(Postgrest)
         install(Realtime)
+        install(Storage)
     }
 
     // Función para validar el login
@@ -188,4 +193,32 @@ object SupabaseClient {
             emptyList()
         }
     }
+
+    // Funcion para crear platos
+    suspend fun crearPlato(plato: PlatoInsert): Boolean {
+        return try {
+            client.from("platos").insert(plato)
+            true
+        } catch (e: Exception) {
+            println("Error al crear plato: ${e.message}")
+            false
+        }
+    }
+    // Funcion para crear platos y guardar en la BD
+    suspend fun subirImagenPlato(byteArray: ByteArray): String? {
+        return try {
+            val bucket = client.storage.from("platos")
+            val fileName = "plato_${System.currentTimeMillis()}.jpg"
+
+            bucket.upload(fileName, byteArray) {
+                upsert = false
+            }
+
+            bucket.publicUrl(fileName)
+        } catch (e: Exception) {
+            println("Error subiendo imagen: ${e.message}")
+            null
+        }
+    }
+
 }
