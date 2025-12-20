@@ -78,4 +78,6 @@ dependencies {
     implementation(libs.ktor.client.android)
     implementation("androidx.compose.material:material-icons-extended:1.7.6")
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.ktor.client.android)
+    implementation("io.github.jan-tennert.supabase:storage-kt:2.5.0")
 }
