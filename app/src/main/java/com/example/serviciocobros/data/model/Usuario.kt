@@ -15,3 +15,13 @@ data class Usuario(
     @SerialName("fecha_registro") val fechaRegistro: String? = null,
     val empresa: String? = null
 ) : Parcelable
+
+@Serializable
+data class UsuarioInsert(
+    @SerialName("nombre_completo") val nombre: String,
+    @SerialName("correo_electronico") val correo: String,
+    @SerialName("contrasena") val contrasena: String,
+    @SerialName("es_administrador") val esAdmin: Boolean = false,
+    @SerialName("numero_celular") val celular: String? = null,
+    val activo: Boolean = true
+)

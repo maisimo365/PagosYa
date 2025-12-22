@@ -18,6 +18,7 @@ import com.example.serviciocobros.data.model.PlatoInsert
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
+import com.example.serviciocobros.data.model.UsuarioInsert
 
 object SupabaseClient {
     //Conexion con supabase
@@ -254,6 +255,17 @@ object SupabaseClient {
             true
         } catch (e: Exception) {
             println("Error al actualizar plato: ${e.message}")
+            false
+        }
+    }
+
+    // Función para crear un nuevo usuario
+    suspend fun crearUsuario(usuario: UsuarioInsert): Boolean {
+        return try {
+            client.from("usuarios").insert(usuario)
+            true
+        } catch (e: Exception) {
+            println("Error al crear usuario: ${e.message}")
             false
         }
     }

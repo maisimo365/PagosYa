@@ -36,6 +36,7 @@ import com.example.serviciocobros.ui.cobrar.CobrarDetailScreen
 import com.example.serviciocobros.ui.cobrar.CobrarUsersScreen
 import com.example.serviciocobros.ui.debts.UserDebtsScreen
 import com.example.serviciocobros.ui.home.AddDishScreen
+import com.example.serviciocobros.ui.home.AddUserScreen
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
 import com.example.serviciocobros.ui.home.PaymentHistoryScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
@@ -136,6 +137,15 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                 )
             }
 
+            pantallaSecundaria == "agregar_usuario" -> {
+                AddUserScreen(
+                    onBack = { pantallaSecundaria = null },
+                    onUserAdded = {
+                        pantallaSecundaria = null
+                    }
+                )
+            }
+
             pantallaSecundaria == "editar_plato" -> {
                 EditMenuScreen(
                     onBack = { pantallaSecundaria = null },
@@ -198,6 +208,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                         onNavigateToCobrar = { pantallaSecundaria = "cobrar" },
                         onNavigateToAddPlato = { pantallaSecundaria = "agregar_plato" },
                         onNavigateToEditPlato = { pantallaSecundaria = "editar_plato" },
+                        onNavigateToAddUser = { pantallaSecundaria = "agregar_usuario" },
                         selectedTab = adminSelectedTab,
                         onTabSelected = { adminSelectedTab = it }
                     )
