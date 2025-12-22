@@ -38,6 +38,7 @@ import com.example.serviciocobros.ui.debts.UserDebtsScreen
 import com.example.serviciocobros.ui.home.AddDishScreen
 import com.example.serviciocobros.ui.home.AddUserScreen
 import com.example.serviciocobros.ui.home.AdminDashboardScreen
+import com.example.serviciocobros.ui.home.ManageUsersScreen
 import com.example.serviciocobros.ui.home.PaymentHistoryScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
 import com.example.serviciocobros.ui.home.UserHomeScreen
@@ -146,6 +147,12 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                 )
             }
 
+            pantallaSecundaria == "desactivar_usuario" -> {
+                ManageUsersScreen(
+                    onBack = { pantallaSecundaria = null }
+                )
+            }
+
             pantallaSecundaria == "editar_plato" -> {
                 EditMenuScreen(
                     onBack = { pantallaSecundaria = null },
@@ -209,6 +216,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                         onNavigateToAddPlato = { pantallaSecundaria = "agregar_plato" },
                         onNavigateToEditPlato = { pantallaSecundaria = "editar_plato" },
                         onNavigateToAddUser = { pantallaSecundaria = "agregar_usuario" },
+                        onNavigateToDeactivateUser = { pantallaSecundaria = "desactivar_usuario" },
                         selectedTab = adminSelectedTab,
                         onTabSelected = { adminSelectedTab = it }
                     )

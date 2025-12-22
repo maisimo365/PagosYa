@@ -270,4 +270,68 @@ object SupabaseClient {
         }
     }
 
+    // Función para obtener la deuda total acumulada de un usuario
+    suspend fun obtenerDeudaTotalUsuario(idUsuario: Long): Double {
+        return try {
+            val deudas = client.from("deudas").select {
+                filter {
+                    eq("id_consumidor", idUsuario)
+                    eq("activo", true)
+                    gt("saldo_pendiente", 0)
+                }
+            }.decodeList<Deuda>()
+            deudas.sumOf { it.saldoPendiente }
+        } catch (e: Exception) {
+            println("Error al calcular deuda: ${e.message}")
+            0.0
+        }
+    }
+
+    // Función para desactivar un usuario
+    suspend fun desactivarUsuario(idUsuario: Long): Boolean {
+        return try {
+            client.from("usuarios").update({
+                set("activo", false)
+            }) {
+                filter {
+                    eq("id_usuario", idUsuario)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            println("Error al desactivar usuario: ${e.message}")
+            false
+        }
+    }
+    // Función nueva: Obtener TODOS los clientes (activos e inactivos)
+    suspend fun obtenerTodosLosClientes(): List<Usuario> {
+        return try {
+            client.from("usuarios").select {
+                filter {
+                    eq("es_administrador", false)
+                }
+                order("nombre_completo", Order.ASCENDING)
+            }.decodeList<Usuario>()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // Función nueva: Activar usuario
+    suspend fun activarUsuario(idUsuario: Long): Boolean {
+        return try {
+            client.from("usuarios").update({
+                set("activo", true)
+            }) {
+                filter {
+                    eq("id_usuario", idUsuario)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            println("Error al activar usuario: ${e.message}")
+            false
+        }
+    }
+
 }

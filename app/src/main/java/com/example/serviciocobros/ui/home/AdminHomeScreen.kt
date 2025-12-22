@@ -23,7 +23,8 @@ fun AdminHomeScreen(
     onCobrarClick: () -> Unit,
     onAddPlatoClick: () -> Unit,
     onEditPlatoClick: () -> Unit,
-    onAddUserClick: () -> Unit
+    onAddUserClick: () -> Unit,
+    onDeactivateUserClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -69,12 +70,10 @@ fun AdminHomeScreen(
 
         Text("Gestión", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-
         AdminOptionItem(icon = Icons.Default.Restaurant, title = "Añadir Plato") { onAddPlatoClick() }
-
         AdminOptionItem(icon = Icons.Default.Edit, title = "Editar Plato") { onEditPlatoClick() }
-
         AdminOptionItem(icon = Icons.Default.PersonAdd, title = "Añadir Usuario") { onAddUserClick() }
+        AdminOptionItem(icon = Icons.Default.Delete, title = "Administar Usuarios") { onDeactivateUserClick() }
     }
 }
 
