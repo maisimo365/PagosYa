@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,6 +29,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -95,7 +99,9 @@ fun AppNavigation(
     var selectedUserId by rememberSaveable { mutableStateOf<Long?>(null) }
     var selectedUserName by rememberSaveable { mutableStateOf<String?>(null) }
     var platoAEditar by remember { mutableStateOf<Plato?>(null) }
+
     var isCheckingSession by remember { mutableStateOf(true) }
+
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -277,6 +283,7 @@ fun AppNavigation(
 fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
@@ -322,12 +329,30 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
             singleLine = true
         )
         Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
-            value = password, onValueChange = { password = it }, label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+            value = password,
+            onValueChange = { password = it },
+            label = { Text("Contraseña") },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = OrangeTerracotta, focusedLabelColor = OrangeTerracotta, cursorColor = OrangeTerracotta),
-            singleLine = true
+            singleLine = true,
+            trailingIcon = {
+                val image = if (passwordVisible)
+                    Icons.Default.Visibility
+                else
+                    Icons.Default.VisibilityOff
+
+                val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = description)
+                }
+            }
         )
+
         Spacer(modifier = Modifier.height(32.dp))
         Button(
             onClick = {
