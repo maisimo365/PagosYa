@@ -30,6 +30,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.serviciocobros.data.SupabaseClient
+import com.example.serviciocobros.data.model.Plato
 import com.example.serviciocobros.data.model.Usuario
 import com.example.serviciocobros.ui.cobrar.CobrarDetailScreen
 import com.example.serviciocobros.ui.cobrar.CobrarUsersScreen
@@ -39,6 +40,8 @@ import com.example.serviciocobros.ui.home.AdminDashboardScreen
 import com.example.serviciocobros.ui.home.PaymentHistoryScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
 import com.example.serviciocobros.ui.home.UserHomeScreen
+import com.example.serviciocobros.ui.menu.EditDishScreen
+import com.example.serviciocobros.ui.menu.EditMenuScreen
 import com.example.serviciocobros.ui.menu.MenuScreen
 import com.example.serviciocobros.ui.theme.ServicioCobrosTheme
 import kotlinx.coroutines.launch
@@ -82,11 +85,10 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     var usuarioActual by rememberSaveable { mutableStateOf<Usuario?>(null) }
     var pantallaSecundaria by rememberSaveable { mutableStateOf<String?>(null) }
-
     var adminSelectedTab by rememberSaveable { mutableIntStateOf(0) }
-
     var selectedUserId by rememberSaveable { mutableStateOf<Long?>(null) }
     var selectedUserName by rememberSaveable { mutableStateOf<String?>(null) }
+    var platoAEditar by remember { mutableStateOf<Plato?>(null) }
 
     val refreshUser: suspend () -> Unit = {
         val id = usuarioActual?.id
@@ -101,7 +103,11 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
     } else {
 
         BackHandler(enabled = pantallaSecundaria != null) {
-            pantallaSecundaria = null
+            if (pantallaSecundaria == "editar_detalle_plato") {
+                pantallaSecundaria = "editar_plato"
+            } else {
+                pantallaSecundaria = null
+            }
         }
 
         when {
@@ -126,6 +132,26 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                     onBack = { pantallaSecundaria = null },
                     onDishAdded = {
                         pantallaSecundaria = null
+                    }
+                )
+            }
+
+            pantallaSecundaria == "editar_plato" -> {
+                EditMenuScreen(
+                    onBack = { pantallaSecundaria = null },
+                    onEditClick = { plato ->
+                        platoAEditar = plato
+                        pantallaSecundaria = "editar_detalle_plato"
+                    }
+                )
+            }
+
+            pantallaSecundaria == "editar_detalle_plato" && platoAEditar != null -> {
+                EditDishScreen(
+                    plato = platoAEditar!!,
+                    onBack = { pantallaSecundaria = "editar_plato" },
+                    onSuccess = {
+                        pantallaSecundaria = "editar_plato"
                     }
                 )
             }
@@ -171,6 +197,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                         onNavigateToAnotar = { pantallaSecundaria = "anotar" },
                         onNavigateToCobrar = { pantallaSecundaria = "cobrar" },
                         onNavigateToAddPlato = { pantallaSecundaria = "agregar_plato" },
+                        onNavigateToEditPlato = { pantallaSecundaria = "editar_plato" },
                         selectedTab = adminSelectedTab,
                         onTabSelected = { adminSelectedTab = it }
                     )

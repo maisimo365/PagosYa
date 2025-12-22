@@ -220,5 +220,42 @@ object SupabaseClient {
             null
         }
     }
+    // Funcion para desactivar (borrar logicamente) un plato
+    suspend fun eliminarPlato(idPlato: Long): Boolean {
+        return try {
+            client.from("platos").update({
+                set("activo", false)
+            }) {
+                filter {
+                    eq("id_plato", idPlato)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            println("Error al eliminar plato: ${e.message}")
+            false
+        }
+    }
+
+    // Función para actualizar un plato existente
+    suspend fun actualizarPlato(id: Long, nombre: String, precio: Double, fotoUrl: String?): Boolean {
+        return try {
+            client.from("platos").update({
+                set("nombre_plato", nombre)
+                set("precio", precio)
+                if (fotoUrl != null) {
+                    set("foto_plato", fotoUrl)
+                }
+            }) {
+                filter {
+                    eq("id_plato", id)
+                }
+            }
+            true
+        } catch (e: Exception) {
+            println("Error al actualizar plato: ${e.message}")
+            false
+        }
+    }
 
 }

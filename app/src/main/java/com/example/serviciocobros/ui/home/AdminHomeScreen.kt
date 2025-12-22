@@ -21,7 +21,8 @@ fun AdminHomeScreen(
     usuario: Usuario,
     onAnotarClick: () -> Unit,
     onCobrarClick: () -> Unit,
-    onAddPlatoClick: () -> Unit
+    onAddPlatoClick: () -> Unit,
+    onEditPlatoClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -70,7 +71,8 @@ fun AdminHomeScreen(
 
         AdminOptionItem(icon = Icons.Default.Restaurant, title = "Añadir Plato") { onAddPlatoClick() }
 
-        AdminOptionItem(icon = Icons.Default.Edit, title = "Editar Plato") { }
+        AdminOptionItem(icon = Icons.Default.Edit, title = "Editar Plato") { onEditPlatoClick() }
+
         AdminOptionItem(icon = Icons.Default.PersonAdd, title = "Añadir Usuario") { }
     }
 }

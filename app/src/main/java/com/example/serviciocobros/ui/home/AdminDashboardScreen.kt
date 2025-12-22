@@ -41,6 +41,7 @@ fun AdminDashboardScreen(
     onNavigateToAnotar: () -> Unit,
     onNavigateToCobrar: () -> Unit,
     onNavigateToAddPlato: () -> Unit,
+    onNavigateToEditPlato: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
@@ -107,7 +108,8 @@ fun AdminDashboardScreen(
                         usuario = usuario,
                         onAnotarClick = onNavigateToAnotar,
                         onCobrarClick = onNavigateToCobrar,
-                        onAddPlatoClick = onNavigateToAddPlato
+                        onAddPlatoClick = onNavigateToAddPlato,
+                        onEditPlatoClick = onNavigateToEditPlato
                     )
                     1 -> AdminMenuContent(
                         refreshTrigger = refreshTrigger,
