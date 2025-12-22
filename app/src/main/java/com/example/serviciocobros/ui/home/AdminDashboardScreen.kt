@@ -45,7 +45,8 @@ fun AdminDashboardScreen(
     selectedTab: Int,
     onNavigateToAddUser: () -> Unit,
     onTabSelected: (Int) -> Unit,
-    onNavigateToDeactivateUser: () -> Unit
+    onNavigateToDeactivateUser: () -> Unit,
+    onNavigateToReports: () -> Unit
 ) {
     BackHandler(enabled = selectedTab != 0) {
         onTabSelected(0)
@@ -113,7 +114,8 @@ fun AdminDashboardScreen(
                         onAddPlatoClick = onNavigateToAddPlato,
                         onEditPlatoClick = onNavigateToEditPlato,
                         onAddUserClick = onNavigateToAddUser,
-                        onDeactivateUserClick = onNavigateToDeactivateUser
+                        onDeactivateUserClick = onNavigateToDeactivateUser,
+                        onReportsClick = onNavigateToReports
                     )
                     1 -> AdminMenuContent(
                         refreshTrigger = refreshTrigger,

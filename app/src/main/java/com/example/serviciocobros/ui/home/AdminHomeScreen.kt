@@ -24,7 +24,8 @@ fun AdminHomeScreen(
     onAddPlatoClick: () -> Unit,
     onEditPlatoClick: () -> Unit,
     onAddUserClick: () -> Unit,
-    onDeactivateUserClick: () -> Unit
+    onDeactivateUserClick: () -> Unit,
+    onReportsClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -74,6 +75,9 @@ fun AdminHomeScreen(
         AdminOptionItem(icon = Icons.Default.Edit, title = "Editar Plato") { onEditPlatoClick() }
         AdminOptionItem(icon = Icons.Default.PersonAdd, title = "Añadir Usuario") { onAddUserClick() }
         AdminOptionItem(icon = Icons.Default.Delete, title = "Administar Usuarios") { onDeactivateUserClick() }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Reportes", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        AdminOptionItem(icon = Icons.Default.BarChart, title = "Reporte de Ingresos") { onReportsClick() }
     }
 }
 

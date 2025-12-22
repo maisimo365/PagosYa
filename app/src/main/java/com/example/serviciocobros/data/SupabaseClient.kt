@@ -19,6 +19,7 @@ import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.storage
 import io.github.jan.supabase.storage.upload
 import com.example.serviciocobros.data.model.UsuarioInsert
+import kotlinx.datetime.*
 
 object SupabaseClient {
     //Conexion con supabase
@@ -334,4 +335,20 @@ object SupabaseClient {
         }
     }
 
+    // Función para obtener deudas en un rango de fechas (formato YYYY-MM-DD)
+    suspend fun obtenerReporteDeudas(fechaInicio: String, fechaFin: String): List<Deuda> {
+        return try {
+            client.from("deudas").select {
+                filter {
+                    // CORREGIDO: Usar 'fecha_consumo' en lugar de 'fecha_registro'
+                    gte("fecha_consumo", "$fechaInicio 00:00:00")
+                    lte("fecha_consumo", "$fechaFin 23:59:59")
+                    eq("activo", true)
+                }
+            }.decodeList<Deuda>()
+        } catch (e: Exception) {
+            println("Error reporte: ${e.message}")
+            emptyList()
+        }
+    }
 }

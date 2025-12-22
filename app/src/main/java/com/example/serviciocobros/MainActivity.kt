@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -48,6 +49,7 @@ import com.example.serviciocobros.ui.home.AdminDashboardScreen
 import com.example.serviciocobros.ui.home.ManageUsersScreen
 import com.example.serviciocobros.ui.home.PaymentHistoryScreen
 import com.example.serviciocobros.ui.home.RegisterDebtScreen
+import com.example.serviciocobros.ui.home.ReportsScreen
 import com.example.serviciocobros.ui.home.UserHomeScreen
 import com.example.serviciocobros.ui.menu.EditDishScreen
 import com.example.serviciocobros.ui.menu.EditMenuScreen
@@ -197,6 +199,11 @@ fun AppNavigation(
                     onBack = { pantallaSecundaria = null }
                 )
             }
+            pantallaSecundaria == "reportes" -> {
+                ReportsScreen(
+                    onBack = { pantallaSecundaria = null }
+                )
+            }
 
             pantallaSecundaria == "editar_plato" -> {
                 EditMenuScreen(
@@ -262,6 +269,7 @@ fun AppNavigation(
                         onNavigateToEditPlato = { pantallaSecundaria = "editar_plato" },
                         onNavigateToAddUser = { pantallaSecundaria = "agregar_usuario" },
                         onNavigateToDeactivateUser = { pantallaSecundaria = "desactivar_usuario" },
+                        onNavigateToReports = { pantallaSecundaria = "reportes" },
                         selectedTab = adminSelectedTab,
                         onTabSelected = { adminSelectedTab = it }
                     )
