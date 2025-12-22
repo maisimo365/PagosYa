@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
 
             ServicioCobrosTheme(darkTheme = isDarkTheme) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    AppNavigation(currentTheme, onThemeChange)
+                    AppNavigation(currentTheme, onThemeChange, prefs)
                 }
             }
         }
@@ -84,13 +84,30 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
+fun AppNavigation(
+    currentTheme: AppTheme,
+    onThemeChange: (AppTheme) -> Unit,
+    prefs: android.content.SharedPreferences
+) {
     var usuarioActual by rememberSaveable { mutableStateOf<Usuario?>(null) }
     var pantallaSecundaria by rememberSaveable { mutableStateOf<String?>(null) }
     var adminSelectedTab by rememberSaveable { mutableIntStateOf(0) }
     var selectedUserId by rememberSaveable { mutableStateOf<Long?>(null) }
     var selectedUserName by rememberSaveable { mutableStateOf<String?>(null) }
     var platoAEditar by remember { mutableStateOf<Plato?>(null) }
+    var isCheckingSession by remember { mutableStateOf(true) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        val savedId = prefs.getLong("saved_user_id", -1L)
+        if (savedId != -1L) {
+            val user = SupabaseClient.obtenerUsuarioPorId(savedId)
+            if (user != null && user.activo) {
+                usuarioActual = user
+            }
+        }
+        isCheckingSession = false
+    }
 
     val refreshUser: suspend () -> Unit = {
         val id = usuarioActual?.id
@@ -100,8 +117,27 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
         }
     }
 
-    if (usuarioActual == null) {
-        LoginScreen(onLoginSuccess = { usuarioActual = it })
+    val logoutAction: () -> Unit = {
+        usuarioActual = null
+        prefs.edit().remove("saved_user_id").apply()
+        pantallaSecundaria = null
+        adminSelectedTab = 0
+    }
+
+    if (isCheckingSession) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = OrangeTerracotta)
+        }
+    } else if (usuarioActual == null) {
+        LoginScreen(
+            onLoginSuccess = { usuario ->
+                prefs.edit().putLong("saved_user_id", usuario.id).apply()
+                usuarioActual = usuario
+            }
+        )
     } else {
 
         BackHandler(enabled = pantallaSecundaria != null) {
@@ -207,7 +243,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                 if (usuarioActual!!.esAdmin) {
                     AdminDashboardScreen(
                         usuario = usuarioActual!!,
-                        onLogout = { usuarioActual = null },
+                        onLogout = logoutAction,
                         currentTheme = currentTheme,
                         onThemeChange = onThemeChange,
                         onRefresh = refreshUser,
@@ -223,7 +259,7 @@ fun AppNavigation(currentTheme: AppTheme, onThemeChange: (AppTheme) -> Unit) {
                 } else {
                     UserHomeScreen(
                         usuario = usuarioActual!!,
-                        onLogout = { usuarioActual = null },
+                        onLogout = logoutAction,
                         onVerMenu = { pantallaSecundaria = "menu" },
                         onVerDeudas = { pantallaSecundaria = "mis_deudas" },
                         onVerHistorial = { pantallaSecundaria = "historial_pagos" },
@@ -300,7 +336,10 @@ fun LoginScreen(onLoginSuccess: (Usuario) -> Unit) {
                 scope.launch {
                     val usuario = SupabaseClient.login(correo, password)
                     isLoading = false
-                    if (usuario != null) { Toast.makeText(context, "Bienvenido: ${usuario.nombre}", Toast.LENGTH_LONG).show(); onLoginSuccess(usuario) }
+                    if (usuario != null) {
+                        Toast.makeText(context, "Bienvenido: ${usuario.nombre}", Toast.LENGTH_LONG).show()
+                        onLoginSuccess(usuario)
+                    }
                     else { Toast.makeText(context, "Correo o contraseña incorrectos", Toast.LENGTH_LONG).show() }
                 }
             },
