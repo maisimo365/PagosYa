@@ -11,7 +11,8 @@ data class DeudaInsert(
     val monto: Double,
     @SerialName("saldo_pendiente") val saldoPendiente: Double,
     val descripcion: String? = null,
-    @SerialName("precio_plato_en_momento") val precioPlatoMoment: Double
+    @SerialName("precio_plato_en_momento") val precioPlatoMoment: Double,
+    @SerialName("fecha_consumo") val fechaConsumo: String? = null
 )
 
 @Serializable

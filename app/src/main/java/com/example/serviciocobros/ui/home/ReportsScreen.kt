@@ -24,12 +24,25 @@ import com.example.serviciocobros.data.model.Deuda
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.ZonedDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 val GreenIncome = Color(0xFF27AE60)
 val RedPending = Color(0xFFEB5757)
 val BlueSales = Color(0xFF2F80ED)
+
+fun formatearFechaLocal(fechaUtc: String): String {
+    return try {
+        val fechaZoned = ZonedDateTime.parse(fechaUtc)
+        val fechaLocal = fechaZoned.withZoneSameInstant(ZoneId.systemDefault())
+        val formatter = DateTimeFormatter.ofPattern("dd MMM, hh:mm a", Locale("es", "ES"))
+        fechaLocal.format(formatter)
+    } catch (e: Exception) {
+        if (fechaUtc.length >= 10) fechaUtc.take(10) else fechaUtc
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,6 +251,10 @@ fun ReporteItem(deuda: Deuda) {
     val pagado = deuda.monto - deuda.saldoPendiente
     val esPagadoCompleto = deuda.saldoPendiente == 0.0
 
+    val fechaFormateada = remember(deuda.fecha) {
+        formatearFechaLocal(deuda.fecha)
+    }
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(2.dp),
@@ -258,7 +275,7 @@ fun ReporteItem(deuda: Deuda) {
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        text = if (deuda.fecha.length >= 10) deuda.fecha.take(10) else deuda.fecha,
+                        text = fechaFormateada,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )

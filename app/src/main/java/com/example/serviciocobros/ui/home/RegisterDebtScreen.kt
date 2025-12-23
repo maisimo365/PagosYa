@@ -30,6 +30,8 @@ import com.example.serviciocobros.data.model.DeudaInsert
 import com.example.serviciocobros.data.model.Plato
 import com.example.serviciocobros.data.model.Usuario
 import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -297,6 +299,8 @@ fun RegisterDebtScreen(
 
                                 isSaving = true
                                 scope.launch {
+                                    val fechaActual = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
                                     val nuevaDeuda = DeudaInsert(
                                         idRegistrador = idRegistrador,
                                         idConsumidor = selectedCliente!!.id,
@@ -304,7 +308,8 @@ fun RegisterDebtScreen(
                                         monto = precioFinal,
                                         saldoPendiente = precioFinal,
                                         descripcion = descFinal,
-                                        precioPlatoMoment = precioFinal
+                                        precioPlatoMoment = precioFinal,
+                                        fechaConsumo = fechaActual
                                     )
 
                                     val exito = SupabaseClient.registrarDeuda(nuevaDeuda)
