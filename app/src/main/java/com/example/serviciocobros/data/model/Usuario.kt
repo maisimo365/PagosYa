@@ -24,5 +24,6 @@ data class UsuarioInsert(
     @SerialName("contrasena") val contrasena: String,
     @SerialName("es_administrador") val esAdmin: Boolean = false,
     @SerialName("numero_celular") val celular: String? = null,
-    val activo: Boolean = true
+    val activo: Boolean = true,
+    val empresa: String? = null
 )

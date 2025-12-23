@@ -1,7 +1,13 @@
 package com.example.serviciocobros.ui.home
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,8 +17,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddShoppingCart
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -20,11 +29,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.serviciocobros.data.SupabaseClient
 import com.example.serviciocobros.data.model.DeudaInsert
 import com.example.serviciocobros.data.model.Plato
@@ -42,7 +54,6 @@ fun RegisterDebtScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
     var todosLosClientes by remember { mutableStateOf<List<Usuario>>(emptyList()) }
     var platos by remember { mutableStateOf<List<Plato>>(emptyList()) }
     var isLoadingDatos by remember { mutableStateOf(true) }
@@ -50,17 +61,16 @@ fun RegisterDebtScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val pullState = rememberPullToRefreshState()
 
-    var filtroEmpresa by remember { mutableStateOf("Carpinteria") }
-    var esConsumoExtra by remember { mutableStateOf(false) }
+    var filtroEmpresa by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
 
     var selectedCliente by remember { mutableStateOf<Usuario?>(null) }
-    var expandedCliente by remember { mutableStateOf(false) }
-
     var selectedPlato by remember { mutableStateOf<Plato?>(null) }
-    var expandedPlato by remember { mutableStateOf(false) }
 
+    var esConsumoExtra by remember { mutableStateOf(false) }
     var descripcion by remember { mutableStateOf("") }
     var montoManual by remember { mutableStateOf("") }
+
     var isSaving by remember { mutableStateOf(false) }
 
     fun cargarDatos() {
@@ -71,6 +81,14 @@ fun RegisterDebtScreen(
             todosLosClientes = clientesFrescos
             platos = platosFrescos
 
+            if (filtroEmpresa == null) {
+                val primeraEmpresa = clientesFrescos
+                    .mapNotNull { it.empresa }
+                    .filter { it != "Administrador" }
+                    .firstOrNull()
+                if (primeraEmpresa != null) filtroEmpresa = primeraEmpresa
+            }
+
             isLoadingDatos = false
             isRefreshing = false
         }
@@ -80,9 +98,19 @@ fun RegisterDebtScreen(
         cargarDatos()
     }
 
-    val clientesFiltrados = remember(todosLosClientes, filtroEmpresa) {
-        todosLosClientes.filter {
-            it.empresa?.contains(filtroEmpresa, ignoreCase = true) == true
+    val empresasDisponibles = remember(todosLosClientes) {
+        todosLosClientes
+            .mapNotNull { it.empresa }
+            .filter { it != "Administrador" && it.isNotBlank() }
+            .distinct()
+            .sorted()
+    }
+
+    val clientesFiltrados = remember(todosLosClientes, filtroEmpresa, searchQuery) {
+        todosLosClientes.filter { cliente ->
+            val coincideEmpresa = filtroEmpresa == null || cliente.empresa.equals(filtroEmpresa, ignoreCase = true)
+            val coincideBusqueda = cliente.nombre.contains(searchQuery, ignoreCase = true)
+            coincideEmpresa && coincideBusqueda
         }
     }
 
@@ -102,10 +130,7 @@ fun RegisterDebtScreen(
             modifier = Modifier.padding(padding).fillMaxSize(),
             state = pullState,
             isRefreshing = isRefreshing,
-            onRefresh = {
-                isRefreshing = true
-                cargarDatos()
-            }
+            onRefresh = { isRefreshing = true; cargarDatos() }
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 if (isLoadingDatos && !isRefreshing) {
@@ -116,72 +141,74 @@ fun RegisterDebtScreen(
                             .fillMaxSize()
                             .imePadding()
                             .verticalScroll(rememberScrollState())
-                            .padding(24.dp)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text("Filtrar por Empresa", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it; selectedCliente = null },
+                            label = { Text("Buscar cliente...") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            FilterChipEmpresa(
-                                label = "Carpintería",
-                                selected = filtroEmpresa == "Carpinteria",
-                                onClick = { filtroEmpresa = "Carpinteria"; selectedCliente = null }
-                            )
-                            FilterChipEmpresa(
-                                label = "Supermercado",
-                                selected = filtroEmpresa == "Supermercado",
-                                onClick = { filtroEmpresa = "Supermercado"; selectedCliente = null }
-                            )
+                            items(empresasDisponibles) { empresa ->
+                                FilterChip(
+                                    selected = filtroEmpresa == empresa,
+                                    onClick = {
+                                        filtroEmpresa = empresa
+                                        selectedCliente = null
+                                        searchQuery = ""
+                                    },
+                                    label = { Text(empresa) },
+                                    leadingIcon = if (filtroEmpresa == empresa) {
+                                        { Icon(Icons.Default.Check, contentDescription = null, Modifier.size(16.dp)) }
+                                    } else null
+                                )
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            "Seleccionar Cliente (${clientesFiltrados.size})",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                        ExposedDropdownMenuBox(
-                            expanded = expandedCliente,
-                            onExpandedChange = { expandedCliente = !expandedCliente }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedCliente?.nombre ?: "",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Cliente (${clientesFiltrados.size})") },
-                                placeholder = { Text("Selecciona...") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCliente) },
-                                modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    focusedLabelColor = MaterialTheme.colorScheme.primary
-                                )
-                            )
-                            ExposedDropdownMenu(
-                                expanded = expandedCliente,
-                                onDismissRequest = { expandedCliente = false }
+                        if (clientesFiltrados.isEmpty()) {
+                            Box(modifier = Modifier.fillMaxWidth().padding(20.dp), contentAlignment = Alignment.Center) {
+                                Text("No hay clientes con ese nombre", color = Color.Gray)
+                            }
+                        } else {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                if (clientesFiltrados.isEmpty()) {
-                                    DropdownMenuItem(text = { Text("No hay clientes en esta empresa") }, onClick = { expandedCliente = false })
-                                } else {
-                                    clientesFiltrados.forEach { cliente ->
-                                        DropdownMenuItem(
-                                            text = { Text(cliente.nombre, fontWeight = FontWeight.Bold) },
-                                            onClick = { selectedCliente = cliente; expandedCliente = false }
-                                        )
-                                    }
+                                items(clientesFiltrados) { cliente ->
+                                    ClienteCard(
+                                        cliente = cliente,
+                                        isSelected = selectedCliente?.id == cliente.id,
+                                        onClick = {
+                                            selectedCliente = if (selectedCliente?.id == cliente.id) null else cliente
+                                        }
+                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
-                        HorizontalDivider()
-                        Spacer(modifier = Modifier.height(24.dp))
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = if (esConsumoExtra) "Consumo Externo" else "Consumo del Menú",
+                                text = if (esConsumoExtra) "Consumo Externo" else "Menú Disponible",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = if (esConsumoExtra) Color(0xFFD32F2F) else MaterialTheme.colorScheme.primary
@@ -204,74 +231,58 @@ fun RegisterDebtScreen(
                                 }
                             )
                         }
-                        Text(
-                            text = if (esConsumoExtra) "Registrar algo que no está en el menú" else "Elegir un plato existente",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
 
                         if (!esConsumoExtra) {
-                            ExposedDropdownMenuBox(
-                                expanded = expandedPlato,
-                                onExpandedChange = { expandedPlato = !expandedPlato }
-                            ) {
-                                OutlinedTextField(
-                                    value = selectedPlato?.let { "${it.nombre} - Bs. ${it.precio}" } ?: "",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    label = { Text("Plato") },
-                                    placeholder = { Text("Selecciona el plato") },
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedPlato) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = expandedPlato,
-                                    onDismissRequest = { expandedPlato = false }
-                                ) {
-                                    platos.forEach { plato ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                                    Text(plato.nombre)
-                                                    Text("Bs. ${plato.precio}", fontWeight = FontWeight.Bold)
-                                                }
-                                            },
-                                            onClick = { selectedPlato = plato; expandedPlato = false }
-                                        )
+                            SimpleVerticalGrid(items = platos, columns = 2) { plato ->
+                                PlatoCard(
+                                    plato = plato,
+                                    isSelected = selectedPlato?.id == plato.id,
+                                    onClick = {
+                                        selectedPlato = if (selectedPlato?.id == plato.id) null else plato
                                     }
-                                }
+                                )
                             }
                         } else {
-                            OutlinedTextField(
-                                value = descripcion,
-                                onValueChange = { descripcion = it },
-                                label = { Text("Descripción (Obligatorio)") },
-                                placeholder = { Text("Ej: Gaseosa 3L, Pan extra...") },
-                                modifier = Modifier.fillMaxWidth(),
-                                isError = descripcion.isBlank()
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            OutlinedTextField(
-                                value = montoManual,
-                                onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) montoManual = it },
-                                label = { Text("Monto (Bs)") },
-                                placeholder = { Text("0.00") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                                modifier = Modifier.fillMaxWidth(),
-                                prefix = { Text("Bs. ") }
-                            )
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, Color.Gray.copy(alpha = 0.3f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    OutlinedTextField(
+                                        value = descripcion,
+                                        onValueChange = {
+                                            if (it.length <= 30) descripcion = it
+                                        },
+                                        label = { Text("Descripción") },
+                                        placeholder = { Text("Ej: Gaseosa 3L...") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        supportingText = {
+                                            Text(
+                                                text = "${descripcion.length}/30",
+                                                color = if (descripcion.length == 30) MaterialTheme.colorScheme.error else Color.Gray
+                                            )
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    OutlinedTextField(
+                                        value = montoManual,
+                                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) montoManual = it },
+                                        label = { Text("Monto (Bs)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        prefix = { Text("Bs. ") }
+                                    )
+                                }
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         Button(
                             onClick = {
                                 if (selectedCliente == null) {
-                                    Toast.makeText(context, "Selecciona un cliente", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "¡Debes seleccionar un cliente!", Toast.LENGTH_SHORT).show()
                                     return@Button
                                 }
 
@@ -281,7 +292,7 @@ fun RegisterDebtScreen(
 
                                 if (esConsumoExtra) {
                                     if (descripcion.isBlank() || montoManual.isBlank()) {
-                                        Toast.makeText(context, "Descripción y monto son obligatorios", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Descripción y monto obligatorios", Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
                                     precioFinal = montoManual.toDoubleOrNull() ?: 0.0
@@ -289,7 +300,7 @@ fun RegisterDebtScreen(
                                     descFinal = descripcion
                                 } else {
                                     if (selectedPlato == null) {
-                                        Toast.makeText(context, "Selecciona un plato", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "¡Selecciona un plato del menú!", Toast.LENGTH_SHORT).show()
                                         return@Button
                                     }
                                     precioFinal = selectedPlato!!.precio
@@ -316,7 +327,7 @@ fun RegisterDebtScreen(
                                     isSaving = false
 
                                     if (exito) {
-                                        Toast.makeText(context, "Anotado correctamente", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Pedido anotado con éxito", Toast.LENGTH_SHORT).show()
                                         onSuccess()
                                     } else {
                                         Toast.makeText(context, "Error al guardar", Toast.LENGTH_LONG).show()
@@ -325,15 +336,14 @@ fun RegisterDebtScreen(
                             },
                             enabled = !isSaving,
                             modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             if (isSaving) {
                                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                             } else {
                                 Icon(Icons.Default.Save, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Confirmar Pedido", fontSize = 18.sp)
+                                Text("CONFIRMAR PEDIDO")
                             }
                         }
                     }
@@ -343,28 +353,105 @@ fun RegisterDebtScreen(
     }
 }
 
+
 @Composable
-fun FilterChipEmpresa(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = CircleShape,
-        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.height(40.dp)
+fun ClienteCard(cliente: Usuario, isSelected: Boolean, onClick: () -> Unit) {
+    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray.copy(alpha = 0.3f)
+
+    Card(
+        modifier = Modifier
+            .width(140.dp)
+            .height(100.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp)
+        Column(
+            modifier = Modifier.padding(12.dp).fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (selected) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-            Text(text = label, fontWeight = FontWeight.SemiBold)
+            Icon(Icons.Default.Person, contentDescription = null, tint = if(isSelected) MaterialTheme.colorScheme.primary else Color.Gray)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = cliente.nombre,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = cliente.empresa ?: "",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
+    }
+}
+
+@Composable
+fun PlatoCard(plato: Plato, isSelected: Boolean, onClick: () -> Unit) {
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val borderWidth = if (isSelected) 3.dp else 0.dp
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(160.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (!plato.fotoUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = plato.fotoUrl,
+                    contentDescription = plato.nombre,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.LightGray.copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.Fastfood, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                }
+            }
+
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
+            Box(modifier = Modifier.fillMaxSize().border(borderWidth, borderColor, RoundedCornerShape(16.dp)))
+
+            Column(modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)) {
+                Text(text = plato.nombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(text = "Bs. ${plato.precio}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFFFFD700))
+            }
+
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape).padding(4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun <T> SimpleVerticalGrid(items: List<T>, columns: Int, content: @Composable (T) -> Unit) {
+    items.chunked(columns).forEach { rowItems ->
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            rowItems.forEach { item -> Box(modifier = Modifier.weight(1f)) { content(item) } }
+            repeat(columns - rowItems.size) { Spacer(modifier = Modifier.weight(1f)) }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }

@@ -195,7 +195,7 @@ fun CobrarDetailScreen(
                         OutlinedTextField(
                             value = montoPagarInput,
                             onValueChange = { input -> if (input.all { it.isDigit() || it == '.' } && input.count { it == '.' } <= 1) montoPagarInput = input },
-                            label = { Text("Monto a Abonar") },
+                            label = { Text("Monto a cobrar") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.fillMaxWidth()

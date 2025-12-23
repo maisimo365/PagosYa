@@ -38,10 +38,19 @@ fun AddUserScreen(
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var celular by remember { mutableStateOf("") }
+    var empresa by remember { mutableStateOf("") }
     var esAdmin by remember { mutableStateOf(false) }
 
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(esAdmin) {
+        if (esAdmin) {
+            empresa = "Administrador"
+        } else {
+            if (empresa == "Administrador") empresa = ""
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -111,7 +120,7 @@ fun AddUserScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("¿Es Administrador?", fontWeight = FontWeight.Bold)
-                        Text("Permite gestionar menú y usuarios", style = MaterialTheme.typography.bodySmall)
+                        Text("Se asignará la empresa 'Administrador'", style = MaterialTheme.typography.bodySmall)
                     }
                     Switch(
                         checked = esAdmin,
@@ -119,6 +128,26 @@ fun AddUserScreen(
                     )
                 }
             }
+
+            OutlinedTextField(
+                value = empresa,
+                onValueChange = {
+                    if (!esAdmin) empresa = it
+                },
+                label = { Text("Empresa / Negocio") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                enabled = !esAdmin,
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                supportingText = {
+                    if (esAdmin) Text("Bloqueado: Valor fijo para administradores")
+                    else Text("El nombre de la empresa del cliente")
+                }
+            )
 
             if (errorMessage.isNotEmpty()) {
                 Text(
@@ -134,8 +163,19 @@ fun AddUserScreen(
                 onClick = {
                     scope.launch {
                         if (nombre.isBlank() || correo.isBlank() || password.isBlank()) {
-                            errorMessage = "Por favor completa nombre, correo y contraseña."
+                            errorMessage = "Completa nombre, correo y contraseña."
                             return@launch
+                        }
+
+                        if (!esAdmin) {
+                            if (empresa.isBlank()) {
+                                errorMessage = "Debes ingresar el nombre de la empresa."
+                                return@launch
+                            }
+                            if (empresa.contains("administrador", ignoreCase = true)) {
+                                errorMessage = "El nombre de empresa no puede contener la palabra 'Administrador'."
+                                return@launch
+                            }
                         }
 
                         isSaving = true
@@ -146,7 +186,8 @@ fun AddUserScreen(
                             correo = correo,
                             contrasena = password,
                             esAdmin = esAdmin,
-                            celular = celular.ifBlank { null }
+                            celular = celular.ifBlank { null },
+                            empresa = empresa
                         )
 
                         val exito = SupabaseClient.crearUsuario(nuevoUsuario)
@@ -156,7 +197,7 @@ fun AddUserScreen(
                             Toast.makeText(context, "Usuario creado exitosamente", Toast.LENGTH_SHORT).show()
                             onUserAdded()
                         } else {
-                            errorMessage = "Error al crear usuario. Verifica si el correo ya existe o tu conexión."
+                            errorMessage = "Error al crear. Verifica si el correo ya existe."
                         }
                     }
                 },
