@@ -34,7 +34,6 @@ fun AddUserScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Campos del formulario
     var nombre by remember { mutableStateOf("") }
     var correo by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -59,9 +58,10 @@ fun AddUserScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(16.dp)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("Información del Usuario", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -101,7 +101,6 @@ fun AddUserScreen(
                 singleLine = true
             )
 
-            // Switch para Administrador
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 modifier = Modifier.fillMaxWidth()
