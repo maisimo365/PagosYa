@@ -15,6 +15,11 @@ data class DeudaInsert(
 )
 
 @Serializable
+data class UsuarioSimple(
+    @SerialName("nombre_completo") val nombre: String
+)
+
+@Serializable
 data class PlatoSimple(
     @SerialName("nombre_plato") val nombre: String
 )
@@ -26,15 +31,18 @@ data class Deuda(
     @SerialName("saldo_pendiente") val saldoPendiente: Double,
     @SerialName("fecha_consumo") val fecha: String,
     val descripcion: String? = null,
-    val platos: PlatoSimple? = null
+    val platos: PlatoSimple? = null,
+    @SerialName("consumidor") val consumidor: UsuarioSimple? = null,
+    @SerialName("registrador") val registrador: UsuarioSimple? = null
 )
+
 @Serializable
 data class PagoInsert(
     @SerialName("id_consumidor") val idConsumidor: Long,
     @SerialName("id_cobrador") val idCobrador: Long,
     @SerialName("id_deuda") val idDeuda: Long,
     @SerialName("monto_pagado") val montoPagado: Double,
-    @SerialName("tipo_pago") val tipoPago: String, // 'completo' o 'parcial'
+    @SerialName("tipo_pago") val tipoPago: String,
     @SerialName("metodo_pago") val metodoPago: String = "efectivo"
 )
 
@@ -55,5 +63,5 @@ data class PagoHistorico(
     @SerialName("id_pago") val id: Long,
     @SerialName("monto_pagado") val montoPagado: Double,
     @SerialName("fecha_pago") val fechaPago: String,
-    val deudas: DeudaDetalle? = null // Relación anidada
+    val deudas: DeudaDetalle? = null
 )

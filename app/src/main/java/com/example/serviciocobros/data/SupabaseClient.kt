@@ -338,13 +338,16 @@ object SupabaseClient {
     // Función para obtener deudas en un rango de fechas (formato YYYY-MM-DD)
     suspend fun obtenerReporteDeudas(fechaInicio: String, fechaFin: String): List<Deuda> {
         return try {
-            client.from("deudas").select {
+            val query = "*,consumidor:usuarios!id_consumidor(nombre_completo),registrador:usuarios!id_registrador(nombre_completo)"
+            val columns = Columns.raw(query)
+
+            client.from("deudas").select(columns = columns) {
                 filter {
-                    // CORREGIDO: Usar 'fecha_consumo' en lugar de 'fecha_registro'
                     gte("fecha_consumo", "$fechaInicio 00:00:00")
                     lte("fecha_consumo", "$fechaFin 23:59:59")
                     eq("activo", true)
                 }
+                order("fecha_consumo", Order.DESCENDING)
             }.decodeList<Deuda>()
         } catch (e: Exception) {
             println("Error reporte: ${e.message}")

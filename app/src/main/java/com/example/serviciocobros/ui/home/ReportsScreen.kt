@@ -240,37 +240,77 @@ fun ReporteItem(deuda: Deuda) {
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(2.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = deuda.descripcion ?: "Sin descripción",
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = if (deuda.fecha.length >= 10) deuda.fecha.take(10) else deuda.fecha,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = deuda.descripcion ?: "Sin descripción",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = if (deuda.fecha.length >= 10) deuda.fecha.take(10) else deuda.fecha,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Venta: ${deuda.monto}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (esPagadoCompleto) {
+                        Text("Cobrado", color = GreenIncome, fontWeight = FontWeight.Bold)
+                    } else {
+                        Text("Cobrado: $pagado", color = Color.Gray, fontSize = 12.sp)
+                        Text("Debe: ${deuda.saldoPendiente}", color = RedPending, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
 
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "Venta: ${deuda.monto}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                if (esPagadoCompleto) {
-                    Text("Cobrado: ${deuda.monto}", color = GreenIncome, fontWeight = FontWeight.Bold)
-                } else {
-                    Text("Cobrado: $pagado", color = Color.Gray, fontSize = 12.sp)
-                    Text("Debe: ${deuda.saldoPendiente}", color = RedPending, fontWeight = FontWeight.Bold)
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color.LightGray.copy(alpha = 0.5f)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Cliente (Debe):",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = deuda.consumidor?.nombre ?: "Desconocido",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Registrado por:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = deuda.registrador?.nombre ?: "Sistema",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
