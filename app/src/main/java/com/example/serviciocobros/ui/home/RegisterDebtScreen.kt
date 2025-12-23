@@ -112,6 +112,7 @@ fun RegisterDebtScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .imePadding()
                             .verticalScroll(rememberScrollState())
                             .padding(24.dp)
                     ) {
