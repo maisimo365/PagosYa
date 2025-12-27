@@ -354,4 +354,34 @@ object SupabaseClient {
             emptyList()
         }
     }
+
+    // Funcion para eliminar una deuda (solo borra los que no fueron cobrados)
+    suspend fun eliminarDeuda(idDeuda: Long): Boolean {
+        return try {
+            client.from("deudas").delete {
+                filter { eq("id_deuda", idDeuda) }
+            }
+            true
+        } catch (e: Exception) {
+            println("Error al eliminar deuda: ${e.message}")
+            false
+        }
+    }
+
+    // Funcion para corregir el monto de una deuda
+    suspend fun corregirMontoDeuda(idDeuda: Long, nuevoMonto: Double): Boolean {
+        return try {
+            client.from("deudas").update({
+                set("monto", nuevoMonto)
+                set("saldo_pendiente", nuevoMonto)
+                set("precio_plato_en_momento", nuevoMonto)
+            }) {
+                filter { eq("id_deuda", idDeuda) }
+            }
+            true
+        } catch (e: Exception) {
+            println("Error al corregir deuda: ${e.message}")
+            false
+        }
+    }
 }
